@@ -1,41 +1,27 @@
 use serde::Deserialize;
+use serde_json::{from_str, Value};
+use std::{
+    fs::File,
+    io::{self, Read},
+};
 
-#[derive(Deserialize, Debug)]
-pub struct QuestionMultiple {
+#[derive(Debug, Deserialize, Default)]
+pub struct Question {
     pub question: String,
-    pub options: Vec<String>, // Changez Vec<i32> à Vec<String> pour uniformiser les options
-    pub answer: Vec<String>,  // Changez Vec<i32> à Vec<String> pour uniformiser les réponses
+    pub options: Option<Vec<Value>>,
+    pub answer: Option<Value>,  // Using serde_json::Value to handle both Vec<String> and String
 }
 
-#[derive(Deserialize, Debug)]
-pub struct QuestionUnique {
-    pub question: String,
-    pub options: Vec<String>,
-    pub answer: String,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct QuestionNumber {
-    pub question: String,
-    pub answer: i32,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct QuestionString {
-    pub question: String,
-    pub answer: String,
-}
-
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Deserialize, Default)]
 pub struct Category {
-    pub multiple: Option<Vec<QuestionMultiple>>,
-    pub unique: Option<Vec<QuestionUnique>>,
-    pub number: Option<Vec<QuestionNumber>>,
-    pub string: Option<Vec<QuestionString>>,
+    pub multiple: Option<Vec<Question>>,
+    pub unique: Option<Vec<Question>>,
+    pub number: Option<Vec<Question>>,
+    pub string: Option<Vec<Question>>,
 }
 
-#[derive(Deserialize, Debug)]
-pub struct Quiz {
+#[derive(Debug, Deserialize, Default)]
+pub struct Data {
     pub math: Category,
     pub science: Category,
     pub history: Category,
@@ -43,7 +29,9 @@ pub struct Quiz {
     pub programming: Category,
 }
 
-pub fn load() -> Result<Quiz, String> {
-    let data_string = std::fs::read_to_string("data.json").map_err(|err| err.to_string())?;
-    serde_json::from_str(&data_string).map_err(|err| err.to_string())?
+pub fn load() -> io::Result<Data> {
+    let mut output = String::new();
+    let mut file = File::open("data.json")?;
+    file.read_to_string(&mut output)?;
+    from_str(&output).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
 }
