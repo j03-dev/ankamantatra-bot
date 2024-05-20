@@ -1,0 +1,12 @@
+[package]
+name = "ankamantatra-bot"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+russenger = "0.1.5"
+actix-web = "4"
+serde_json = "1.0.117"
+serde = { version = "1.0.202", features = ["derive"] }
