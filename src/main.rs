@@ -3,11 +3,8 @@ mod serializers;
 mod test;
 
 use rand::prelude::*;
-use rand::rngs::StdRng;
 use russenger::prelude::*;
 use serializers::{load, Question};
-use std::sync::Arc;
-use tokio::sync::Mutex;
 
 #[action]
 async fn Main(res: Res, req: Req) {
@@ -55,11 +52,8 @@ async fn ChooseCategory(res: Res, req: Req) {
     };
 
     let items = ["multiple", "unique", "number", "string"];
-    let rng = Arc::new(Mutex::new(StdRng::from_entropy()));
-    let chosen_item = {
-        let mut rng = rng.lock().await;
-        items.choose(&mut *rng)
-    };
+    let index = rand::thread_rng().gen_range(0..items.len());
+    let chosen_item = items.get(index);
 
     match chosen_item {
         Some(&"multiple") => send_question(res, req, &category_data.multiple).await,
@@ -73,44 +67,37 @@ async fn ChooseCategory(res: Res, req: Req) {
     };
 }
 
-async fn send_question(res: Res, req: Req, q: &Option<Vec<Question>>) {
-    if let Some(questions) = q {
-        let rng = Arc::new(Mutex::new(StdRng::from_entropy()));
-        let (question, options, answer) = {
-            let mut rng = rng.lock().await;
-            let question = questions.choose(&mut *rng).unwrap();
-            (
-                question.question.clone(),
-                question.options.clone(),
-                question.answer.clone(),
-            )
-        };
-        res.send(TextModel::new(&req.user, &question)).await;
-        let quick_replies = options
-            .unwrap()
-            .iter()
-            .map(|opt| {
-                let response = opt.to_string();
-                let answer = answer.clone().unwrap().to_string();
-                QuickReply::new(
-                    &response,
-                    "",
-                    Payload::new(ShowResponse, Some(Data::new([&response, &answer], None))),
-                )
-            })
-            .collect();
-        let quick_reply_model = QuickReplyModel::new(&req.user, "Choose an option", quick_replies);
-        res.send(quick_reply_model).await;
-    } else {
-        res.send(TextModel::new(&req.user, "No questions available"))
-            .await;
-    }
+async fn send_question(res: Res, req: Req, questions: &Option<Vec<Question>>) {
+    let questions = questions.clone().unwrap_or_default();
+    let (question, options, answer) = {
+        let index = rand::thread_rng().gen_range(0..questions.len());
+        let question = questions[index].clone();
+        (
+            question.question.clone(),
+            question.options.clone(),
+            question.answer.clone(),
+        )
+    };
+    res.send(TextModel::new(&req.user, &question)).await; // send question
+    let quick_replies = options
+        .unwrap()
+        .iter()
+        .map(|opt| {
+            let response = opt.to_string();
+            let answer = answer.clone().unwrap().to_string();
+            let data = Data::new([&response, &answer], None);
+            let payload = Payload::new(ShowResponse, Some(data));
+            QuickReply::new(&response, "", payload)
+        })
+        .collect();
+    let quick_reply_model = QuickReplyModel::new(&req.user, "Choose an option", quick_replies);
+    res.send(quick_reply_model).await; // send options
 }
 
 #[action]
 async fn ShowResponse(res: Res, req: Req) {
-    let [resp, answ]: [String; 2] = req.data.get_value();
-    if resp == answ {
+    let [response, answer]: [String; 2] = req.data.get_value();
+    if response == answer {
         res.send(TextModel::new(&req.user, "Correct!")).await;
     } else {
         res.send(TextModel::new(&req.user, "Incorrect!")).await;
