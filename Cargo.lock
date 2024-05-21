@@ -267,9 +267,11 @@ name = "ankamantatra-bot"
 version = "0.1.0"
 dependencies = [
  "actix-web",
+ "rand",
  "russenger",
  "serde",
  "serde_json",
+ "tokio",
 ]
 
 [[package]]

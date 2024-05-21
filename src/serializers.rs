@@ -5,14 +5,14 @@ use std::{
     io::{self, Read},
 };
 
-#[derive(Debug, Deserialize, Default)]
+#[derive(Debug, Deserialize, Default, Clone)]
 pub struct Question {
     pub question: String,
     pub options: Option<Vec<Value>>,
-    pub answer: Option<Value>,  // Using serde_json::Value to handle both Vec<String> and String
+    pub answer: Option<Value>, // Using serde_json::Value to handle both Vec<String> and String
 }
 
-#[derive(Debug, Deserialize, Default)]
+#[derive(Debug, Deserialize, Default, Clone)]
 pub struct Category {
     pub multiple: Option<Vec<Question>>,
     pub unique: Option<Vec<Question>>,
@@ -20,7 +20,7 @@ pub struct Category {
     pub string: Option<Vec<Question>>,
 }
 
-#[derive(Debug, Deserialize, Default)]
+#[derive(Debug, Deserialize, Default, Clone)]
 pub struct Data {
     pub math: Category,
     pub science: Category,
