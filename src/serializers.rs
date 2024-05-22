@@ -8,25 +8,17 @@ use std::{
 #[derive(Debug, Deserialize, Default, Clone)]
 pub struct Question {
     pub question: String,
-    pub options: Option<Vec<Value>>,
-    pub answer: Option<Value>, // Using serde_json::Value to handle both Vec<String> and String
-}
-
-#[derive(Debug, Deserialize, Default, Clone)]
-pub struct Category {
-    pub multiple: Option<Vec<Question>>,
-    pub unique: Option<Vec<Question>>,
-    pub number: Option<Vec<Question>>,
-    pub string: Option<Vec<Question>>,
+    pub options: Vec<Value>,
+    pub answer: Value,
 }
 
 #[derive(Debug, Deserialize, Default, Clone)]
 pub struct Data {
-    pub math: Category,
-    pub science: Category,
-    pub history: Category,
-    pub sports: Category,
-    pub programming: Category,
+    pub math: Vec<Question>,
+    pub science: Vec<Question>,
+    pub history: Vec<Question>,
+    pub sports: Vec<Question>,
+    pub programming: Vec<Question>
 }
 
 pub fn load() -> io::Result<Data> {

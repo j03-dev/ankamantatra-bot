@@ -271,7 +271,6 @@ dependencies = [
  "russenger",
  "serde",
  "serde_json",
- "tokio",
 ]
 
 [[package]]
@@ -1542,9 +1541,8 @@ dependencies = [
 
 [[package]]
 name = "russenger"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f8c3b4fec5f35c167d7fd991b32cd30f4ba3645870e823f6db45c402c4d5136"
+version = "0.1.6"
+source = "git+https://github.com/j03-dev/russenger?branch=nightly#a444774435139564d6f76d421a977294c03911ac"
 dependencies = [
  "actix-files",
  "actix-web",

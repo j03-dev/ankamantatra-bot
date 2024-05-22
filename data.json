@@ -1,455 +1,572 @@
 {
-    "math": {
-        "multiple": [
-            {
-                "question": "Which of the following are multiples of 3?",
-                "options": [
-                    1,
-                    2,
-                    3,
-                    4,
-                    5,
-                    6,
-                    7,
-                    8,
-                    9,
-                    10,
-                    11,
-                    12
-                ],
-                "answer": [
-                    3,
-                    6,
-                    9,
-                    12
-                ]
-            },
-            {
-                "question": "What 3 numbers result in the same answer when they are added or multiplied altogether? ",
-                "options": [
-                    1,
-                    2,
-                    3,
-                    4,
-                    5,
-                    6
-                ],
-                "answer": [
-                    1,
-                    2,
-                    3
-                ]
-            },
-            {
-                "question": "Absolute Value Of Following Integers -5, -1, 0, 2, 4 ?",
-                "options": [
-                    -5,
-                    5,
-                    1,
-                    4,
-                    -2,
-                    0,
-                    2,
-                    -1
-                ],
-                "answer": [
-                    5,
-                    1,
-                    4,
-                    2,
-                    0
-                ]
-            }
-        ],
-        "unique": [
-            {
-                "question": "Who amongs the following is a mathematician?",
-                "options": [
-                    "Albert Einstein",
-                    "Isaac Newton",
-                    "Leonardo Da Vinci",
-                    "Charles Darwin"
-                ],
-                "answer": "Isaac Newton"
-            },
-            {
-                "question": "What is the highest common factor of the numbers 30 and 132?",
-                "options": [
-                    3,
-                    10,
-                    6,
-                    9
-                ],
-                "answer": 6
-            },
-            {
-                "question": "What is the name of a triangle that has two sides of the same length?",
-                "options": [
-                    "isosceles",
-                    "Equilateral",
-                    "Right-angled",
-                    "Scalene"
-                ],
-                "answer": "isosceles"
-            }
-        ],
-        "number": [
-            {
-                "question": "How many vertices are present on a cube?",
-                "answer": 8
-            },
-            {
-                "question": "From the number 0 to the number 1000, the letter “A” appears only in?",
-                "answer": 1000
-            },
-            {
-                "question": "Adding the numbers between 1 to 100 consecutively (1+2+3+4+…) gives you what final answer?",
-                "answer": 5050
-            }
-        ],
-        "string": [
-            {
-                "question": "what does the number 3.14 represent?",
-                "answer": "PI"
-            },
-            {
-                "question": "An object is thrown into the air. After a while, it falls back to the Earth. The flight path of the object traces what shape?",
-                "answer": "Parabole"
-            },
-            {
-                "question": "What is the year 1982 in Roman Numerals?",
-                "answer": "MCMLXXXII"
-            }
-        ]
-    },
-    "science": {
-        "multiple": [
-            {
-                "question": "Which of the following are not element of the periodic table?",
-                "options": [
-                    "Hydrogen",
-                    "Carbon",
-                    "Oxygen",
-                    "Vibranium",
-                    "Gold",
-                    "Silver",
-                    "Adamantium"
-                ],
-                "answer": [
-                    "Vibranium",
-                    "Adamantium"
-                ]
-            },
-            {
-                "question": "Which of the following are insects?",
-                "options": [
-                    "Ant",
-                    "Lion",
-                    "Tiger",
-                    "Elephant",
-                    "Spider",
-                    "Mosquito",
-                    "Fly",
-                    "Bee"
-                ],
-                "answer": [
-                    "Ant",
-                    "Mosquito",
-                    "Fly",
-                    "Bee"
-                ]
-            }
-        ],
-        "unique": [
-            {
-                "question": "What is the heaviest organ in the human body?",
-                "options": [
-                    "Heart",
-                    "Brain",
-                    "Lungs",
-                    "Liver"
-                ],
-                "answer": "Liver"
-            },
-            {
-                "question": "Who discovered penicillin?",
-                "options": [
-                    "Alexander Fleming",
-                    "Albert Einstein",
-                    "Isaac Newton",
-                    "Leonardo Da Vinci"
-                ],
-                "answer": "Alexander Fleming"
-            },
-            {
-                "question": "How many teeth does an adult human have?",
-                "options": [
-                    28,
-                    30,
-                    32
-                ],
-                "answer": 32
-            }
-        ],
-        "number": [
-            {
-                "question": "How many bones are in the human body?",
-                "answer": 206
-            },
-            {
-                "question": "How many planets are in the solar system?",
-                "answer": 8
-            },
-            {
-                "question": "How many days are in a year?",
-                "answer": 365
-            },
-            {
-                "question": "How many days are in a leap year?",
-                "answer": 366
-            }
-        ],
-        "string": [
-            {
-                "question": "What branch of the medicine involve the study of blood?",
-                "answer": "Hematology"
-            },
-            {
-                "question": "What is the biggest planet in our solar system?",
-                "answer": "Jupiter"
-            },
-            {
-                "question": "What is the hardest natural substance on Earth?",
-                "answer": "Diamond"
-            }
-        ]
-    },
-    "history": {
-        "multiple": [
-            {
-                "question": "Which of the following are not part of the 7 wonders of the world?",
-                "options": [
-                    "Great Wall of China",
-                    "Chichen Itza",
-                    "Petra",
-                    "Colosseum",
-                    "Taj Mahal",
-                    "Machu Picchu",
-                    "Christ the Redeemer"
-                ],
-                "answer": [
-                    "Petra",
-                    "Machu Picchu"
-                ]
-            }
-        ],
-        "unique": [
-            {
-                "question": "Who was the first president of the United States?",
-                "options": [
-                    "George Washington",
-                    "Abraham Lincoln",
-                    "Thomas Jefferson",
-                    "John Adams"
-                ],
-                "answer": "George Washington"
-            },
-            {
-                "question": "What was the term for the official policy of racial segregation in South Africa until 1994?",
-                "options": [
-                    "Oversight",
-                    "Apartheid",
-                    "Libel",
-                    "Civility"
-                ],
-                "answer": "Apartheid"
-            },
-            {
-                "question": "In 1912, which famous human made sea vessel sunk?",
-                "options": [
-                    "Le Raymound",
-                    "Hans Hedtoft",
-                    "Titanic",
-                    "Albatross"
-                ],
-                "answer": "Titanic"
-            }
-        ],
-        "number": [
-            {
-                "question": "How many years did the Cold War last?",
-                "answer": 45
-            },
-            {
-                "question": "How many years did the Second World War last?",
-                "answer": 6
-            },
-            {
-                "question": "How many years did the First World War last?",
-                "answer": 4
-            }
-        ],
-        "string": [
-            {
-                "question": "What is the name of the commander of the Yamato ship?",
-                "answer": "Isoroku Yamamoto"
-            },
-            {
-                "question": "What is the biggest of the empires of all time?",
-                "answer": "British Empire"
-            },
-            {
-                "question": "What is the name of the first human fossile?",
-                "answer": "Lucy"
-            }
-        ]
-    },
-    "sports": {
-        "multiple": [
-            {
-                "question": "Which of the following are not part of the 5 rings of the Olympic Games?",
-                "options": [
-                    "Athletics",
-                    "Swimming",
-                    "Cycling",
-                    "Gymnastics",
-                    "Boxing",
-                    "Judo",
-                    "Taekwondo"
-                ],
-                "answer": [
-                    "Boxing",
-                    "Judo",
-                    "Taekwondo"
-                ]
-            },
-            {
-                "question": "which of these sports are outdor?",
-                "options": [
-                    "Basketball",
-                    "Surfing",
-                    "Cycling",
-                    "Gymnastics",
-                    "Boxing",
-                    "Snowboarding",
-                    "Taekwondo"
-                ],
-                "answer": [
-                    "Surfing",
-                    "Cycling",
-                    "Snowboarding"
-                ]
-            }
-        ],
-        "unique": [
-            {
-                "question": "Who is the best football player of all time?",
-                "options": [
-                    "Lionel Messi",
-                    "Cristiano Ronaldo",
-                    "Diego Maradona",
-                    "Pele"
-                ],
-                "answer": "Lionel Messi"
-            },
-            {
-                "question": "What sport is best known as the ‘king of sports’?",
-                "options": [
-                    "Voley",
-                    "Soccer",
-                    "Basketball",
-                    "Swimming"
-                ],
-                "answer": "Soccer"
-            }
-        ],
-        "number": [
-            {
-                "question": "How many players are in a football team?",
-                "answer": 11
-            },
-            {
-                "question": "How many players are in a basketball team?",
-                "answer": 5
-            },
-            {
-                "question": "How many players are in a volleyball team?",
-                "answer": 6
-            },
-            {
-                "question": "How many players are in a baseball team?",
-                "answer": 9
-            },
-            {
-                "question": "How many players are in a cricket team?",
-                "answer": 11
-            }
-        ],
-        "string": [
-            {
-                "question": "What is the name of the first football team?",
-                "answer": "Notts County"
-            },
-            {
-                "question": "What is the name of the first basketball team?",
-                "answer": "Olympia"
-            },
-            {
-                "question": "What is the name of the first volleyball team?",
-                "answer": "Mintonette"
-            },
-            {
-                "question": "What is the name of the first baseball team?",
-                "answer": "Knickerbockers"
-            },
-            {
-                "question": "What is the name of the first cricket team?",
-                "answer": "Marylebone Cricket Club"
-            }
-        ]
-    },
-    "programming": {
-        "multiple": [
-            {
-                "question": "Which of the following are not programming languages?",
-                "options": [
-                    "Python",
-                    "Angady",
-                    "C#",
-                    "JavaScript",
-                    "Voay",
-                    "PHP",
-                    "Ruby"
-                ],
-                "answer": [
-                    "Angady",
-                    "Voay"
-                ]
-            }
-        ],
-        "unique": [
-            {
-                "question": "Who is the creator of Python?",
-                "options": [
-                    "Guido van Rossum",
-                    "Bjarne Stroustrup",
-                    "James Gosling",
-                    "Dennis Ritchie"
-                ],
-                "answer": "Guido van Rossum"
-            }
-        ],
-        "number": [
-            {
-                "question": "How many programming languages are there?",
-                "answer": 700
-            }
-        ],
-        "string": [
-            {
-                "question": "What is the name of the first programming language?",
-                "answer": "Fortran"
-            }
-        ]
-    }
+    "math": [
+        {
+            "question": "Who amongs the following is a mathematician?",
+            "options": [
+                "Albert Einstein",
+                "Isaac Newton",
+                "Leonardo Da Vinci",
+                "Charles Darwin"
+            ],
+            "answer": "Isaac Newton"
+        },
+        {
+            "question": "What is the highest common factor of the numbers 30 and 132?",
+            "options": [
+                3,
+                10,
+                6,
+                9
+            ],
+            "answer": 6
+        },
+        {
+            "question": "What is the name of a triangle that has two sides of the same length?",
+            "options": [
+                "isosceles",
+                "Equilateral",
+                "Right-angled",
+                "Scalene"
+            ],
+            "answer": "isosceles"
+        },
+        {
+            "question": "What is the square root of 144?",
+            "options": [
+                10,
+                12,
+                14,
+                16
+            ],
+            "answer": 12
+        },
+        {
+            "question": "How many vertices are present on a cube?",
+            "options": [
+                6,
+                7,
+                8,
+                9
+            ],
+            "answer": 8
+        },
+        {
+            "question": "From the number 0 to the number 1000, the letter “A” appears only in?",
+            "options": [
+                999,
+                1000,
+                1001,
+                1002
+            ],
+            "answer": 1000
+        },
+        {
+            "question": "Adding the numbers between 1 to 100 consecutively (1+2+3+4+…) gives you what final answer?",
+            "options": [
+                5050,
+                5000,
+                5100,
+                5150
+            ],
+            "answer": 5050
+        },
+        {
+            "question": "What is the factorial of 5?",
+            "options": [
+                110,
+                115,
+                120,
+                125
+            ],
+            "answer": 120
+        },
+        {
+            "question": "what does the number 3.14 represent?",
+            "options": [
+                "PI",
+                "E",
+                "LOG",
+                "SIN"
+            ],
+            "answer": "PI"
+        },
+        {
+            "question": "An object is thrown into the air. After a while, it falls back to the Earth. The flight path of the object traces what shape?",
+            "options": [
+                "Circle",
+                "Parabole",
+                "Ellipse",
+                "Hyperbola"
+            ],
+            "answer": "Parabole"
+        },
+        {
+            "question": "What is the year 1982 in Roman Numerals?",
+            "options": [
+                "MCMLXXXI",
+                "MCMLXXXII",
+                "MCMLXXXIII",
+                "MCMLXXXIV"
+            ],
+            "answer": "MCMLXXXII"
+        },
+        {
+            "question": "What is the mathematical term for a result of multiplying?",
+            "options": [
+                "Sum",
+                "Product",
+                "Quotient",
+                "Difference"
+            ],
+            "answer": "Product"
+        }
+    ],
+    "science": [
+        {
+            "question": "What is the heaviest organ in the human body?",
+            "options": [
+                "Heart",
+                "Brain",
+                "Lungs",
+                "Liver"
+            ],
+            "answer": "Liver"
+        },
+        {
+            "question": "Who discovered penicillin?",
+            "options": [
+                "Alexander Fleming",
+                "Albert Einstein",
+                "Isaac Newton",
+                "Leonardo Da Vinci"
+            ],
+            "answer": "Alexander Fleming"
+        },
+        {
+            "question": "How many teeth does an adult human have?",
+            "options": [
+                28,
+                30,
+                32,
+                34
+            ],
+            "answer": 32
+        },
+        {
+            "question": "What is the primary gas in the Earth's atmosphere?",
+            "options": [
+                "Oxygen",
+                "Hydrogen",
+                "Carbon Dioxide",
+                "Nitrogen"
+            ],
+            "answer": "Nitrogen"
+        },
+        {
+            "question": "How many bones are in the human body?",
+            "options": [
+                204,
+                205,
+                206,
+                207
+            ],
+            "answer": 206
+        },
+        {
+            "question": "How many planets are in the solar system?",
+            "options": [
+                7,
+                8,
+                9,
+                10
+            ],
+            "answer": 8
+        },
+        {
+            "question": "How many days are in a year?",
+            "options": [
+                364,
+                365,
+                366,
+                367
+            ],
+            "answer": 365
+        },
+        {
+            "question": "How many days are in a leap year?",
+            "options": [
+                365,
+                366,
+                367,
+                368
+            ],
+            "answer": 366
+        },
+        {
+            "question": "What branch of the medicine involve the study of blood?",
+            "options": [
+                "Cardiology",
+                "Hematology",
+                "Neurology",
+                "Gastroenterology"
+            ],
+            "answer": "Hematology"
+        },
+        {
+            "question": "What is the biggest planet in our solar system?",
+            "options": [
+                "Saturn",
+                "Jupiter",
+                "Mars",
+                "Earth"
+            ],
+            "answer": "Jupiter"
+        },
+        {
+            "question": "What is the hardest natural substance on Earth?",
+            "options": [
+                "Gold",
+                "Iron",
+                "Diamond",
+                "Quartz"
+            ],
+            "answer": "Diamond"
+        },
+        {
+            "question": "What is the chemical symbol for water?",
+            "options": [
+                "HO",
+                "H2O",
+                "H2O2",
+                "HO2"
+            ],
+            "answer": "H2O"
+        }
+    ],
+    "history": [
+        {
+            "question": "Who was the first president of the United States?",
+            "options": [
+                "George Washington",
+                "Abraham Lincoln",
+                "Thomas Jefferson",
+                "John Adams"
+            ],
+            "answer": "George Washington"
+        },
+        {
+            "question": "What was the term for the official policy of racial segregation in South Africa until 1994?",
+            "options": [
+                "Oversight",
+                "Apartheid",
+                "Libel",
+                "Civility"
+            ],
+            "answer": "Apartheid"
+        },
+        {
+            "question": "In 1912, which famous human made sea vessel sunk?",
+            "options": [
+                "Le Raymound",
+                "Hans Hedtoft",
+                "Titanic",
+                "Albatross"
+            ],
+            "answer": "Titanic"
+        },
+        {
+            "question": "Who was known as the 'Iron Lady'?",
+            "options": [
+                "Margaret Thatcher",
+                "Angela Merkel",
+                "Indira Gandhi",
+                "Hillary Clinton"
+            ],
+            "answer": "Margaret Thatcher"
+        },
+        {
+            "question": "How many years did the Cold War last?",
+            "options": [
+                43,
+                44,
+                45,
+                46
+            ],
+            "answer": 45
+        },
+        {
+            "question": "How many years did the Second World War last?",
+            "options": [
+                5,
+                6,
+                7,
+                8
+            ],
+            "answer": 6
+        },
+        {
+            "question": "How many years did the First World War last?",
+            "options": [
+                3,
+                4,
+                5,
+                6
+            ],
+            "answer": 4
+        },
+        {
+            "question": "How many years did the Hundred Years' War last?",
+            "options": [
+                115,
+                116,
+                117,
+                118
+            ],
+            "answer": 116
+        },
+        {
+            "question": "What is the name of the commander of the Yamato ship?",
+            "options": [
+                "Isoroku Yamamoto",
+                "Heihachiro Togo",
+                "Takeo Kurita",
+                "Nobutake Kondo"
+            ],
+            "answer": "Isoroku Yamamoto"
+        },
+        {
+            "question": "What is the biggest of the empires of all time?",
+            "options": [
+                "Roman Empire",
+                "Mongol Empire",
+                "British Empire",
+                "Ottoman Empire"
+            ],
+            "answer": "British Empire"
+        },
+        {
+            "question": "What is the name of the first human fossile?",
+            "options": [
+                "Lucy",
+                "Ardi",
+                "Taung Child",
+                "Java Man"
+            ],
+            "answer": "Lucy"
+        },
+        {
+            "question": "What ancient civilization built the Machu Picchu?",
+            "options": [
+                "Maya",
+                "Aztec",
+                "Inca",
+                "Olmec"
+            ],
+            "answer": "Inca"
+        }
+    ],
+    "sports": [
+        {
+            "question": "Who is the best football player of all time?",
+            "options": [
+                "Lionel Messi",
+                "Cristiano Ronaldo",
+                "Diego Maradona",
+                "Pele"
+            ],
+            "answer": "Lionel Messi"
+        },
+        {
+            "question": "What sport is best known as the ‘king of sports’?",
+            "options": [
+                "Voley",
+                "Soccer",
+                "Basketball",
+                "Swimming"
+            ],
+            "answer": "Soccer"
+        },
+        {
+            "question": "Which country hosted the 2016 Summer Olympics?",
+            "options": [
+                "China",
+                "Brazil",
+                "Russia",
+                "Japan"
+            ],
+            "answer": "Brazil"
+        },
+        {
+            "question": "What is the international governing body of football?",
+            "options": [
+                "FIFA",
+                "UEFA",
+                "NFL",
+                "NBA"
+            ],
+            "answer": "FIFA"
+        },
+        {
+            "question": "How many players are in a football team?",
+            "options": [
+                10,
+                11,
+                12,
+                13
+            ],
+            "answer": 11
+        },
+        {
+            "question": "How many players are in a basketball team?",
+            "options": [
+                4,
+                5,
+                6,
+                7
+            ],
+            "answer": 5
+        },
+        {
+            "question": "How many players are in a volleyball team?",
+            "options": [
+                5,
+                6,
+                7,
+                8
+            ],
+            "answer": 6
+        },
+        {
+            "question": "How many players are in a baseball team?",
+            "options": [
+                8,
+                9,
+                10,
+                11
+            ],
+            "answer": 9
+        },
+        {
+            "question": "How many players are in a cricket team?",
+            "options": [
+                10,
+                11,
+                12,
+                13
+            ],
+            "answer": 11
+        },
+        {
+            "question": "What is the name of the first football team?",
+            "options": [
+                "Notts County",
+                "Manchester United",
+                "Liverpool",
+                "Arsenal"
+            ],
+            "answer": "Notts County"
+        },
+        {
+            "question": "What is the name of the first basketball team?",
+            "options": [
+                "Olympia",
+                "Lakers",
+                "Celtics",
+                "Bulls"
+            ],
+            "answer": "Olympia"
+        },
+        {
+            "question": "What is the name of the first volleyball team?",
+            "options": [
+                "Mintonette",
+                "Springfield",
+                "Harvard",
+                "Yale"
+            ],
+            "answer": "Mintonette"
+        },
+        {
+            "question": "What is the name of the first baseball team?",
+            "options": [
+                "Knickerbockers",
+                "Red Sox",
+                "Yankees",
+                "Dodgers"
+            ],
+            "answer": "Knickerbockers"
+        },
+        {
+            "question": "What is the name of the first cricket team?",
+            "options": [
+                "Marylebone Cricket Club",
+                "Sydney Cricket Club",
+                "Melbourne Cricket Club",
+                "Perth Cricket Club"
+            ],
+            "answer": "Marylebone Cricket Club"
+        }
+    ],
+    "programming": [
+        {
+            "question": "Who is the creator of Python?",
+            "options": [
+                "Guido van Rossum",
+                "Bjarne Stroustrup",
+                "James Gosling",
+                "Dennis Ritchie"
+            ],
+            "answer": "Guido van Rossum"
+        },
+        {
+            "question": "Which company developed the Java programming language?",
+            "options": [
+                "Apple",
+                "Microsoft",
+                "Sun Microsystems",
+                "IBM"
+            ],
+            "answer": "Sun Microsystems"
+        },
+        {
+            "question": "How many programming languages are there?",
+            "options": [
+                695,
+                700,
+                705,
+                710
+            ],
+            "answer": 700
+        },
+        {
+            "question": "What is the maximum value of an unsigned 8-bit integer?",
+            "options": [
+                253,
+                254,
+                255,
+                256
+            ],
+            "answer": 255
+        },
+        {
+            "question": "What is the name of the first programming language?",
+            "options": [
+                "Cobol",
+                "Fortran",
+                "Basic",
+                "Pascal"
+            ],
+            "answer": "Fortran"
+        },
+        {
+            "question": "What does 'HTML' stand for?",
+            "options": [
+                "Hyper Text Preprocessor",
+                "Hyper Text Markup Language",
+                "Hyper Text Multiple Language",
+                "Hyper Tool Multi Language"
+            ],
+            "answer": "Hyper Text Markup Language"
+        }
+    ]
 }
