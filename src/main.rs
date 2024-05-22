@@ -13,11 +13,8 @@ async fn Main(res: Res, req: Req) {
     let quick_replies: Vec<QuickReply> = vec!["math", "science", "history", "sport", "programming"]
         .into_iter()
         .map(|k| {
-            QuickReply::new(
-                k,
-                "",
-                Payload::new(ChooseCategory, Some(Data::new(k, None))),
-            )
+            let payload = Payload::new(ChooseCategory, Some(Data::new(k, None)));
+            QuickReply::new(k, "", payload)
         })
         .collect();
 
@@ -30,8 +27,8 @@ async fn ChooseCategory(res: Res, req: Req) {
     let data = match load() {
         Ok(data) => data,
         Err(err) => {
-            res.send(TextModel::new(&req.user, "Failed to load categories"))
-                .await;
+            let message = "Failed to load categories";
+            res.send(TextModel::new(&req.user, message)).await;
             eprintln!("Error loading data: {:?}", err);
             return;
         }
@@ -45,8 +42,8 @@ async fn ChooseCategory(res: Res, req: Req) {
         "sport" => &data.sports,
         "programming" => &data.programming,
         _ => {
-            res.send(TextModel::new(&req.user, "Invalid category"))
-                .await;
+            let message = "Invalid category";
+            res.send(TextModel::new(&req.user, message)).await;
             return;
         }
     };
