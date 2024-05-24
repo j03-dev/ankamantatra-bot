@@ -55,17 +55,18 @@ async fn ChooseCategory(res: Res, req: Req) {
 }
 
 async fn send_question(res: Res, req: Req, question: &Question) {
-    res.send(TextModel::new(&req.user, &question.question)).await; // send question
+    res.send(TextModel::new(&req.user, &question.question))
+        .await; // send question
     let options = &question.options;
-    let answer = &question.answer;
+    let real_answer = &question.answer;
 
     let quick_replies = options
         .iter()
-        .map(|opt| {
-            let response = opt.to_string();
-            let data = Data::new([&response, &answer.to_string()], None);
+        .map(|option| {
+            let possible_answer = option.to_string();
+            let data = Data::new([&possible_answer, &real_answer.to_string()], None);
             let payload = Payload::new(ShowResponse, Some(data));
-            QuickReply::new(&response, "", payload)
+            QuickReply::new(&possible_answer, "", payload)
         })
         .collect::<Vec<_>>();
     let quick_reply_model = QuickReplyModel::new(&req.user, "Choose an option", quick_replies);
@@ -74,8 +75,8 @@ async fn send_question(res: Res, req: Req, question: &Question) {
 
 #[action]
 async fn ShowResponse(res: Res, req: Req) {
-    let [response, answer]: [String; 2] = req.data.get_value();
-    if response.to_lowercase() == answer.to_lowercase() {
+    let [user_answer, answer]: [String; 2] = req.data.get_value();
+    if user_answer.to_lowercase() == answer.to_lowercase() {
         res.send(TextModel::new(&req.user, "Correct!")).await;
     } else {
         res.send(TextModel::new(&req.user, "Incorrect!")).await;

@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 russenger = { version = "0.1.6", git = "https://github.com/j03-dev/russenger", branch = "nightly" }
-actix-web = "4"
-serde_json = "1.0.117"
+actix-web = "^4"
+serde_json = "^1.0.117"
 serde = { version = "1.0.202", features = ["derive"] }
-rand = "0.8.5"
+rand = "^0.8.5"
