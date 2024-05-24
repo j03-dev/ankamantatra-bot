@@ -12,9 +12,9 @@ async fn Main(res: Res, req: Req) {
 
     let quick_replies: Vec<QuickReply> = ["math", "science", "history", "sport", "programming"]
         .into_iter()
-        .map(|k| {
-            let payload = Payload::new(ChooseCategory, Some(Data::new(k, None)));
-            QuickReply::new(k, "", payload)
+        .map(|category| {
+            let payload = Payload::new(ChooseCategory, Some(Data::new(category, None))); // send to Choosecategory action the category
+            QuickReply::new(category, "", payload)
         })
         .collect();
 
@@ -64,7 +64,8 @@ async fn send_question(res: Res, req: Req, question: &Question) {
         .iter()
         .map(|option| {
             let possible_answer = option.to_string();
-            let data = Data::new([&possible_answer, &real_answer.to_string()], None);
+            let value = [&possible_answer, &real_answer.to_string()]; // the value to send to ShowResponse action
+            let data = Data::new(value, None);
             let payload = Payload::new(ShowResponse, Some(data));
             QuickReply::new(&possible_answer, "", payload)
         })
