@@ -194,7 +194,7 @@ async fn ShowResponse(res: Res, req: Req) {
         .await;
 
         let response = ask_gemini(format!(
-            "the question is {question}, explain to me why this is the answer {answer}, in one paragraphe"
+            "The question is {question}, explain to me why: {answer} is the right answer, in one paragraph"
         ))
         .await
         .unwrap();
