@@ -1,0 +1,18 @@
+[package]
+name = "ankamantatra-bot"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies.models]
+path = "../models"
+
+[dependencies]
+russenger = { version = "*", git = "https://github.com/j03-dev/russenger", branch = "turso" }
+rusql-alchemy = { version = "*", git = "https://github.com/j03-dev/rusql-alchemy", branch = "main" }
+actix-web = "^4"
+serde_json = "^1.0.117"
+serde = { version = "1.0.202", features = ["derive"] }
+rand = "^0.8.5"
+reqwest = { version = "0.12.4", features = ["json"] }
