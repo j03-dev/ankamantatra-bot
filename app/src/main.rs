@@ -76,8 +76,11 @@ async fn Main(res: Res, req: Req) {
             .await;
         }
         None => {
-            res.send(TextModel::new(&req.user, "Pls! enter your pseudo here"))
-                .await;
+            res.send(TextModel::new(
+                &req.user,
+                "Please provide your pseudonym in this field.",
+            ))
+            .await;
             req.query.set_action(&req.user, RegisterUser).await;
             return;
         }
