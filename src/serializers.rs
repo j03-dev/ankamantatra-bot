@@ -18,7 +18,7 @@ pub struct Data {
     pub science: Vec<Question>,
     pub history: Vec<Question>,
     pub sports: Vec<Question>,
-    pub programming: Vec<Question>
+    pub programming: Vec<Question>,
 }
 
 pub fn load() -> io::Result<Data> {

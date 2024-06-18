@@ -1,64 +1,29 @@
+mod gemini;
 mod serializers;
 #[cfg(test)]
 mod test;
 
-use models::Score;
+use gemini::ask_gemini;
 use rusql_alchemy::prelude::*;
 
 use rand::prelude::*;
-use russenger::prelude::*;
+use russenger::{models::RussengerUser, prelude::*};
 use serializers::{load, Question};
 
-use serde::Deserialize;
-use serde::Serialize;
-
-const URL: &str =
-    "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=";
-
-#[derive(Serialize, Deserialize, Clone)]
-pub struct Part {
-    pub text: String,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-pub struct Content {
-    role: String,
-    pub parts: Vec<Part>,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-pub struct Candidate {
-    pub content: Content,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-pub struct Response {
-    pub candidates: Vec<Candidate>,
-}
-
-async fn ask_gemini(text: String) -> Result<Response, reqwest::Error> {
-    let api_key = std::env::var("API_KEY").expect("pls check your env file");
-    let api_url = format!("{URL}{api_key}");
-    let body = serde_json::json!(
-        {
-            "contents": [
-                Content {
-                    role: "user".to_owned(),
-                    parts: vec![ Part { text } ]
-                }
-            ]
-        }
-    );
-    let response = reqwest::Client::new()
-        .post(api_url)
-        .json(&body)
-        .send()
-        .await?;
-
-    match response.json().await {
-        Ok(response) => Ok(response),
-        Err(err) => panic!("{err:?}"),
-    }
+#[derive(Model, FromRow, Clone)]
+pub struct Score {
+    #[model(primary_key = true)]
+    pub id: Serial,
+    #[model(unique = true, null = false, size = 20)]
+    pub name: String,
+    #[model(
+        unique = true,
+        null = false,
+        foreign_key = "RussengerUser.facebook_user_id"
+    )]
+    pub user_id: String,
+    #[model(default = 0)]
+    pub score: Integer,
 }
 
 #[action]
@@ -209,4 +174,10 @@ async fn ShowResponse(res: Res, req: Req) {
     Main.execute(res, req).await;
 }
 
-russenger_app!(Main, RegisterUser, ChooseCategory, ShowResponse);
+#[russenger::main]
+async fn main() {
+    let conn = Database::new().await.conn;
+    migrate!([RussengerUser, Score], &conn);
+    russenger::actions![Main, RegisterUser, ChooseCategory, ShowResponse];
+    russenger::launch().await;
+}
