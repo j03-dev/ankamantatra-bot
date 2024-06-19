@@ -6,15 +6,15 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies.rusql-alchemy]
-version = "0.1.0"
+version = "0.1.2"
 default-features = false
 features = ["postgres"]
 
 [dependencies]
-russenger = { version = "*", git = "https://github.com/j03-dev/russenger", branch = "main" }
 actix-web = "^4"
 sqlx = "0.7.0"
+rand = "^0.8.5"
+russenger = "0.2.0"
 serde_json = "^1.0.117"
 serde = { version = "1.0.202", features = ["derive"] }
-rand = "^0.8.5"
 reqwest = { version = "0.12.4", features = ["json"] }

@@ -60,12 +60,12 @@ async fn Main(res: Res, req: Req) {
 #[action]
 async fn RegisterUser(res: Res, req: Req) {
     let username: String = req.data.get_value();
-    let message = if Score::create(
+    let is_create = Score::create(
         kwargs!(name = &username, user_id = &req.user),
         &req.query.conn,
     )
-    .await
-    {
+    .await;
+    let message = if is_create {
         "User registered successfully"
     } else {
         "Failed to register user"
