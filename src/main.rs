@@ -30,33 +30,27 @@ pub struct Score {
 async fn Main(res: Res, req: Req) {
     res.send(GetStartedModel::new(Payload::default())).await;
 
-    let conn = req.query.conn.clone();
-
-    match Score::get(kwargs!(user_id = &req.user), &conn).await {
+    // check if user has a score
+    match Score::get(kwargs!(user_id = &req.user), &req.query.conn).await {
         Some(score) => {
-            res.send(TextModel::new(
-                &req.user,
-                &format!("Your score is {}: {}", score.name, score.score),
-            ))
-            .await;
+            let message = format!("Your score is {}: {}", score.name, score.score);
+            res.send(TextModel::new(&req.user, &message)).await;
         }
         None => {
-            res.send(TextModel::new(
-                &req.user,
-                "Please provide your pseudonym in this field.",
-            ))
-            .await;
+            // if user has no score, register user
+            let message = "Please provide your pseudonym in this field.";
+            res.send(TextModel::new(&req.user, message)).await;
             req.query.set_action(&req.user, RegisterUser).await;
             return;
         }
     }
 
+    let payload = |c| Payload::new(ChooseCategory, Some(Data::new(c, None)));
+
+    // send quick replies of categories
     let quick_replies: Vec<QuickReply> = ["math", "science", "history", "sport", "programming"]
         .into_iter()
-        .map(|category| {
-            let payload = Payload::new(ChooseCategory, Some(Data::new(category, None))); // send to Choosecategory action the category
-            QuickReply::new(category, "", payload)
-        })
+        .map(|category| QuickReply::new(category, "", payload(category)))
         .collect();
 
     let quick_reply_model = QuickReplyModel::new(&req.user, "Choose Category", quick_replies);
@@ -76,9 +70,7 @@ async fn RegisterUser(res: Res, req: Req) {
     } else {
         "Failed to register user"
     };
-
     res.send(TextModel::new(&req.user, message)).await;
-
     Main.execute(res, req).await;
 }
 
@@ -120,18 +112,18 @@ async fn send_question(res: Res, req: Req, question: &Question) {
     let options = &question.options;
     let real_answer = &question.answer;
 
+    let payload = |value| Payload::new(ShowResponse, Some(Data::new(value, None)));
+
     let quick_replies = options
         .iter()
         .map(|option| {
             let possible_answer = option.to_string();
             let value = [
-                &question.question,
-                &possible_answer,
-                &real_answer.to_string(),
+                question.question.clone(),
+                possible_answer.clone(),
+                real_answer.to_string(),
             ];
-            let data = Data::new(value, None);
-            let payload = Payload::new(ShowResponse, Some(data));
-            QuickReply::new(&possible_answer, "", payload)
+            QuickReply::new(&possible_answer, "", payload(value))
         })
         .collect::<Vec<_>>();
     let quick_reply_model = QuickReplyModel::new(&req.user, "Choose an option", quick_replies);
@@ -143,6 +135,7 @@ async fn ShowResponse(res: Res, req: Req) {
     let [question, user_answer, answer]: [String; 3] = req.data.get_value();
     let conn = req.query.conn.clone();
     if user_answer.to_lowercase() == answer.to_lowercase() {
+        // increment score
         if let Some(score) = Score::get(kwargs!(user_id = &req.user), &conn).await {
             Score {
                 score: score.score + 1,
@@ -154,20 +147,12 @@ async fn ShowResponse(res: Res, req: Req) {
         res.send(TextModel::new(&req.user, "Correct!")).await;
     } else {
         res.send(TextModel::new(&req.user, "Incorrect!")).await;
+        let message = format!("The answer is : {answer}");
+        res.send(TextModel::new(&req.user, &message)).await;
+        let prompt = format!("The question is {question}, explain to me why: {answer} is the right answer, in one paragraph");
+        let response = ask_gemini(prompt).await.unwrap();
 
-        res.send(TextModel::new(
-            &req.user,
-            &format!("The answer is : {answer}"),
-        ))
-        .await;
-
-        let response = ask_gemini(format!(
-            "The question is {question}, explain to me why: {answer} is the right answer, in one paragraph"
-        ))
-        .await
-        .unwrap();
-
-        for part in response.candidates[0].content.parts.clone() {
+        for part in response.candidates[0].content.parts.iter() {
             res.send(TextModel::new(&req.user, &part.text)).await;
         }
     }
