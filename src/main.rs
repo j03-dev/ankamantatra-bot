@@ -4,8 +4,6 @@ mod serializers;
 mod test;
 
 use gemini::ask_gemini;
-use rusql_alchemy::prelude::*;
-
 use rand::prelude::*;
 use russenger::{models::RussengerUser, prelude::*};
 use serializers::{load, Question};
@@ -31,7 +29,7 @@ async fn Main(res: Res, req: Req) {
     res.send(GetStartedModel::new(Payload::default())).await;
 
     // check if user has a score
-    match Score::get(kwargs!(user_id = &req.user), &req.query.conn).await {
+    match Score::get(kwargs!(user_id == &req.user), &req.query.conn).await {
         Some(score) => {
             let message = format!("Your score is {}: {}", score.name, score.score);
             res.send(TextModel::new(&req.user, &message)).await;
@@ -136,13 +134,9 @@ async fn ShowResponse(res: Res, req: Req) {
     let conn = req.query.conn.clone();
     if user_answer.to_lowercase() == answer.to_lowercase() {
         // increment score
-        if let Some(score) = Score::get(kwargs!(user_id = &req.user), &conn).await {
-            Score {
-                score: score.score + 1,
-                ..score
-            }
-            .update(&conn)
-            .await;
+        if let Some(mut score) = Score::get(kwargs!(user_id == &req.user), &conn).await {
+            score.score += 1;
+            score.update(&conn).await;
         }
         res.send(TextModel::new(&req.user, "Correct!")).await;
     } else {
