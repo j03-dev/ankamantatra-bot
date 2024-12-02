@@ -5,6 +5,7 @@ mod test;
 
 use gemini::ask_gemini;
 use rand::prelude::*;
+use russenger::error::Context;
 use russenger::{models::RussengerUser, prelude::*};
 use serializers::{load, Question};
 
@@ -26,20 +27,20 @@ pub struct Score {
 
 #[action]
 async fn Main(res: Res, req: Req) {
-    res.send(GetStartedModel::new(Payload::default())).await;
+    // res.send(GetStartedModel::new(Payload::default())).await?;
 
     // check if user has a score
     match Score::get(kwargs!(user_id == &req.user), &req.query.conn).await {
         Some(score) => {
             let message = format!("Your score is {}: {}", score.name, score.score);
-            res.send(TextModel::new(&req.user, &message)).await;
+            res.send(TextModel::new(&req.user, &message)).await?;
         }
         None => {
             // if user has no score, register user
             let message = "Please provide your pseudonym in this field.";
-            res.send(TextModel::new(&req.user, message)).await;
+            res.send(TextModel::new(&req.user, message)).await?;
             req.query.set_action(&req.user, RegisterUser).await;
-            return;
+            return Ok(());
         }
     }
 
@@ -52,7 +53,10 @@ async fn Main(res: Res, req: Req) {
         .collect();
 
     let quick_reply_model = QuickReplyModel::new(&req.user, "Choose Category", quick_replies);
-    res.send(quick_reply_model).await;
+    res.send(quick_reply_model)
+        .await
+        .context("Failed to send quick replies")?;
+    Ok(())
 }
 
 #[action]
@@ -68,8 +72,9 @@ async fn RegisterUser(res: Res, req: Req) {
     } else {
         "Failed to register user"
     };
-    res.send(TextModel::new(&req.user, message)).await;
-    Main.execute(res, req).await;
+    res.send(TextModel::new(&req.user, message)).await?;
+    Main.execute(res, req).await?;
+    Ok(())
 }
 
 #[action]
@@ -78,9 +83,8 @@ async fn ChooseCategory(res: Res, req: Req) {
         Ok(data) => data,
         Err(err) => {
             let message = "Failed to load categories";
-            res.send(TextModel::new(&req.user, message)).await;
-            eprintln!("Error loading data: {:?}", err);
-            return;
+            res.send(TextModel::new(&req.user, message)).await?;
+            error::bail!("{err:?}");
         }
     };
 
@@ -93,22 +97,31 @@ async fn ChooseCategory(res: Res, req: Req) {
         "programming" => &data.programming,
         _ => {
             let message = "Invalid category";
-            res.send(TextModel::new(&req.user, message)).await;
-            return;
+            res.send(TextModel::new(&req.user, message)).await?;
+            return Ok(());
         }
     };
 
     let index = rand::thread_rng().gen_range(0..questions.len());
     let question = &questions[index];
 
-    send_question(res, req, question).await;
+    send_question(res, req, question).await?;
+
+    Ok(())
 }
 
-async fn send_question(res: Res, req: Req, question: &Question) {
+#[derive(serde::Serialize, serde::Deserialize, Default)]
+struct DataValue {
+    question: String,
+    possible_answer: String,
+    true_answer: String,
+}
+
+async fn send_question(res: Res, req: Req, question: &Question) -> error::Result<()> {
     res.send(TextModel::new(&req.user, &question.question))
-        .await; // send question
+        .await?; // send question
     let options = &question.options;
-    let real_answer = &question.answer;
+    let true_answer = &question.answer;
 
     let payload = |value| Payload::new(ShowResponse, Some(Data::new(value, None)));
 
@@ -116,47 +129,55 @@ async fn send_question(res: Res, req: Req, question: &Question) {
         .iter()
         .map(|option| {
             let possible_answer = option.to_string();
-            let value = [
-                question.question.clone(),
-                possible_answer.clone(),
-                real_answer.to_string(),
-            ];
-            QuickReply::new(&possible_answer, "", payload(value))
+            let _value = DataValue {
+                question: question.question.clone(),
+                possible_answer: possible_answer.clone(),
+                true_answer: true_answer.to_string(),
+            };
+            QuickReply::new(&possible_answer, "", payload("test"))
         })
         .collect::<Vec<_>>();
     let quick_reply_model = QuickReplyModel::new(&req.user, "Choose an option", quick_replies);
-    res.send(quick_reply_model).await;
+    res.send(quick_reply_model).await?;
+    Ok(())
 }
 
 #[action]
 async fn ShowResponse(res: Res, req: Req) {
-    let [question, user_answer, answer]: [String; 3] = req.data.get_value();
+    let DataValue {
+        question,
+        possible_answer,
+        true_answer,
+    } = req.data.get_value();
     let conn = req.query.conn.clone();
-    if user_answer.to_lowercase() == answer.to_lowercase() {
+    if possible_answer.to_lowercase() == true_answer.to_lowercase() {
         // increment score
         if let Some(mut score) = Score::get(kwargs!(user_id == &req.user), &conn).await {
             score.score += 1;
             score.update(&conn).await;
         }
-        res.send(TextModel::new(&req.user, "Correct!")).await;
+        res.send(TextModel::new(&req.user, "Correct!")).await?;
     } else {
-        res.send(TextModel::new(&req.user, "Incorrect!")).await;
-        let message = format!("The answer is : {answer}");
-        res.send(TextModel::new(&req.user, &message)).await;
-        let prompt = format!("The question is {question}, explain to me why: {answer} is the right answer, in one paragraph");
+        res.send(TextModel::new(&req.user, "Incorrect!")).await?;
+        let message = format!("The answer is : {true_answer}");
+        res.send(TextModel::new(&req.user, &message)).await?;
+        let prompt = format!("The question is {question}, explain to me why: {true_answer} is the right answer, in one paragraph");
         let response = ask_gemini(prompt).await.unwrap();
 
         for part in response.candidates[0].content.parts.iter() {
-            res.send(TextModel::new(&req.user, &part.text)).await;
+            res.send(TextModel::new(&req.user, &part.text)).await?;
         }
     }
-    Main.execute(res, req).await;
+    Main.execute(res, req).await?;
+
+    Ok(())
 }
 
 #[russenger::main]
-async fn main() {
+async fn main() -> error::Result<()> {
     let conn = Database::new().await.conn;
     migrate!([RussengerUser, Score], &conn);
     russenger::actions![Main, RegisterUser, ChooseCategory, ShowResponse];
-    russenger::launch().await;
+    russenger::launch().await?;
+    Ok(())
 }
