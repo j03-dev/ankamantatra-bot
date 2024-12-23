@@ -7,9 +7,9 @@ edition = "2021"
 
 [dependencies.russenger]
 git = "https://github.com/j03-dev/russenger"
-version = "0.3.1-rc"
+version = "0.3.2-rc"
 features = ["postgres"]
-branch = "test"
+branch = "main"
 
 [dependencies]
 actix-web = "^4"
