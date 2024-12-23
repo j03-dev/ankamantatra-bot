@@ -5,12 +5,12 @@ mod test;
 
 use gemini::ask_gemini;
 use rand::prelude::*;
-use russenger::error::Context;
 use russenger::{models::RussengerUser, prelude::*};
+use serde::{Deserialize, Serialize};
 use serializers::{load, Question};
 
 #[derive(Model, FromRow, Clone)]
-pub struct Score {
+pub struct UserAccount {
     #[model(primary_key = true)]
     pub id: Serial,
     #[model(unique = true, null = false, size = 20)]
@@ -25,12 +25,41 @@ pub struct Score {
     pub score: Integer,
 }
 
+#[derive(Serialize, Deserialize, Default)]
+enum Settings {
+    #[default]
+    ResetScoreAccount,
+    DeleteAccount,
+}
+
 #[action]
 async fn Main(res: Res, req: Req) {
-    // res.send(GetStartedModel::new(Payload::default())).await?;
+    res.send(GetStartedButtonModel::new(Payload::default()))
+        .await?;
+
+    res.send(PersistentMenuModel::new(
+        &req.user,
+        vec![
+            Button::Postback {
+                title: "Reset Score".into(),
+                payload: Payload::new(
+                    AccountSetting,
+                    Some(Data::new(Settings::ResetScoreAccount, None)),
+                ),
+            },
+            Button::Postback {
+                title: "Delete Account".into(),
+                payload: Payload::new(
+                    AccountSetting,
+                    Some(Data::new(Settings::DeleteAccount, None)),
+                ),
+            },
+        ],
+    ))
+    .await?;
 
     // check if user has a score
-    match Score::get(kwargs!(user_id == &req.user), &req.query.conn).await {
+    match UserAccount::get(kwargs!(user_id == &req.user), &req.query.conn).await {
         Some(score) => {
             let message = format!("Your score is {}: {}", score.name, score.score);
             res.send(TextModel::new(&req.user, &message)).await?;
@@ -49,20 +78,38 @@ async fn Main(res: Res, req: Req) {
     // send quick replies of categories
     let quick_replies: Vec<QuickReply> = ["math", "science", "history", "sport", "programming"]
         .into_iter()
-        .map(|category| QuickReply::new(category, "", payload(category)))
+        .map(|category| QuickReply::new(category, None, payload(category)))
         .collect();
 
     let quick_reply_model = QuickReplyModel::new(&req.user, "Choose Category", quick_replies);
-    res.send(quick_reply_model)
-        .await
-        .context("Failed to send quick replies")?;
+    res.send(quick_reply_model).await?;
+    Ok(())
+}
+
+#[action]
+async fn AccountSetting(res: Res, req: Req) {
+    let conn = req.query.conn.clone();
+    match req.data.get_value::<Settings>() {
+        Settings::ResetScoreAccount => {
+            if let Some(mut score) = UserAccount::get(kwargs!(user_id == &req.user), &conn).await {
+                score.score = 0;
+                score.update(&conn).await;
+            }
+        }
+        Settings::DeleteAccount => {
+            if let Some(user_account) = UserAccount::get(kwargs!(user_id == &req.user), &conn).await
+            {
+                user_account.delete(&conn).await;
+            }
+        }
+    };
     Ok(())
 }
 
 #[action]
 async fn RegisterUser(res: Res, req: Req) {
     let username: String = req.data.get_value();
-    let is_create = Score::create(
+    let is_create = UserAccount::create(
         kwargs!(name = &username, user_id = &req.user),
         &req.query.conn,
     )
@@ -110,10 +157,10 @@ async fn ChooseCategory(res: Res, req: Req) {
     Ok(())
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Default)]
-struct DataValue {
+#[derive(Serialize, Deserialize, Default)]
+struct QuestAndAnswer {
     question: String,
-    possible_answer: String,
+    user_anwswer: String,
     true_answer: String,
 }
 
@@ -128,13 +175,12 @@ async fn send_question(res: Res, req: Req, question: &Question) -> error::Result
     let quick_replies = options
         .iter()
         .map(|option| {
-            let possible_answer = option.to_string();
-            let _value = DataValue {
+            let value = QuestAndAnswer {
                 question: question.question.clone(),
-                possible_answer: possible_answer.clone(),
+                user_anwswer: option.to_string(),
                 true_answer: true_answer.to_string(),
             };
-            QuickReply::new(&possible_answer, "", payload("test"))
+            QuickReply::new(&option.to_string(), None, payload(value))
         })
         .collect::<Vec<_>>();
     let quick_reply_model = QuickReplyModel::new(&req.user, "Choose an option", quick_replies);
@@ -144,15 +190,15 @@ async fn send_question(res: Res, req: Req, question: &Question) -> error::Result
 
 #[action]
 async fn ShowResponse(res: Res, req: Req) {
-    let DataValue {
+    let QuestAndAnswer {
         question,
-        possible_answer,
+        user_anwswer,
         true_answer,
     } = req.data.get_value();
     let conn = req.query.conn.clone();
-    if possible_answer.to_lowercase() == true_answer.to_lowercase() {
+    if user_anwswer.to_lowercase() == true_answer.to_lowercase() {
         // increment score
-        if let Some(mut score) = Score::get(kwargs!(user_id == &req.user), &conn).await {
+        if let Some(mut score) = UserAccount::get(kwargs!(user_id == &req.user), &conn).await {
             score.score += 1;
             score.update(&conn).await;
         }
@@ -162,7 +208,7 @@ async fn ShowResponse(res: Res, req: Req) {
         let message = format!("The answer is : {true_answer}");
         res.send(TextModel::new(&req.user, &message)).await?;
         let prompt = format!("The question is {question}, explain to me why: {true_answer} is the right answer, in one paragraph");
-        let response = ask_gemini(prompt).await.unwrap();
+        let response = ask_gemini(prompt).await?;
 
         for part in response.candidates[0].content.parts.iter() {
             res.send(TextModel::new(&req.user, &part.text)).await?;
@@ -176,7 +222,7 @@ async fn ShowResponse(res: Res, req: Req) {
 #[russenger::main]
 async fn main() -> error::Result<()> {
     let conn = Database::new().await.conn;
-    migrate!([RussengerUser, Score], &conn);
+    migrate!([RussengerUser, UserAccount], &conn);
     russenger::actions![Main, RegisterUser, ChooseCategory, ShowResponse];
     russenger::launch().await?;
     Ok(())
