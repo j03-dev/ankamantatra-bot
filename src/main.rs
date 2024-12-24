@@ -102,10 +102,14 @@ async fn AccountSetting(res: Res, req: Req) {
         Settings::DeleteAccount => {
             if let Some(user_account) = UserAccount::get(kwargs!(user_id == &req.user), &conn).await
             {
-                user_account.delete(&conn).await;
+                if !user_account.delete(&conn).await {
+                    res.send(TextModel::new(&req.user, "failed to delete user account"))
+                        .await?;
+                }
             }
         }
     };
+    Main.execute(res, req).await?;
     Ok(())
 }
 
@@ -229,7 +233,13 @@ async fn ShowResponse(res: Res, req: Req) {
 async fn main() -> error::Result<()> {
     let conn = Database::new().await.conn;
     migrate!([RussengerUser, UserAccount], &conn);
-    russenger::actions![Main, RegisterUser, ChooseCategory, ShowResponse];
+    russenger::actions![
+        Main,
+        RegisterUser,
+        ChooseCategory,
+        ShowResponse,
+        AccountSetting
+    ];
     russenger::launch().await?;
     Ok(())
 }
