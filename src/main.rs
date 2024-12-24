@@ -13,14 +13,17 @@ use serializers::{load, Question};
 pub struct UserAccount {
     #[model(primary_key = true)]
     pub id: Serial,
+
     #[model(unique = true, null = false, size = 20)]
     pub name: String,
+
     #[model(
         unique = true,
         null = false,
         foreign_key = "RussengerUser.facebook_user_id"
     )]
     pub user_id: String,
+
     #[model(default = 0)]
     pub score: Integer,
 }
@@ -175,14 +178,17 @@ async fn send_question(res: Res, req: Req, question: &Question) -> error::Result
     let quick_replies = options
         .iter()
         .map(|option| {
-            let value = QuestAndAnswer {
-                question: question.question.clone(),
-                user_anwswer: option.to_string(),
-                true_answer: true_answer.to_string(),
-            };
-            QuickReply::new(&option.to_string(), None, payload(value))
+            QuickReply::new(
+                &option.to_string(),
+                None,
+                payload(QuestAndAnswer {
+                    question: question.question.clone(),
+                    user_anwswer: option.to_string(),
+                    true_answer: true_answer.to_string(),
+                }),
+            )
         })
-        .collect::<Vec<_>>();
+        .collect();
     let quick_reply_model = QuickReplyModel::new(&req.user, "Choose an option", quick_replies);
     res.send(quick_reply_model).await?;
     Ok(())
