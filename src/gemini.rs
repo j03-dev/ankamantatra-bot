@@ -1,3 +1,4 @@
+use russenger::error::Result;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -25,7 +26,7 @@ pub struct Response {
     pub candidates: Vec<Candidate>,
 }
 
-pub(crate) async fn ask_gemini(text: String) -> Result<Response, reqwest::Error> {
+pub(crate) async fn ask_gemini(text: String) -> Result<Response> {
     let api_key = std::env::var("API_KEY").expect("pls check your env file");
     let api_url = format!("{URL}{api_key}");
     let body = serde_json::json!(
@@ -44,8 +45,5 @@ pub(crate) async fn ask_gemini(text: String) -> Result<Response, reqwest::Error>
         .send()
         .await?;
 
-    match response.json().await {
-        Ok(response) => Ok(response),
-        Err(err) => panic!("{err:?}"),
-    }
+    Ok(response.json().await?)
 }

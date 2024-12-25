@@ -11,8 +11,8 @@ use serializers::load;
 
 #[derive(Model, FromRow, Clone)]
 pub struct UserAccount {
-    #[model(primary_key = true)]
-    pub id: Serial,
+    #[model(primary_key = true, auto = true)]
+    pub id: Integer,
 
     #[model(unique = true, null = false, size = 20)]
     pub name: String,
@@ -63,11 +63,10 @@ async fn Main(res: Res, req: Req) {
 
     match UserAccount::get(kwargs!(user_id == &req.user), &req.query.conn).await {
         Some(user_account) => {
-            let message = format!(
-                "username :{} score: {}",
-                user_account.name, user_account.score
-            );
-            res.send(TextModel::new(&req.user, &message)).await?;
+            let username = format!("username:{}", user_account.name);
+            res.send(TextModel::new(&req.user, &username)).await?;
+            let score = format!("score:{}", user_account.score);
+            res.send(TextModel::new(&req.user, &score)).await?;
         }
         None => {
             let message = "Please provide your pseudonym in this field.";
@@ -221,10 +220,11 @@ async fn ShowResponse(res: Res, req: Req) {
         res.send(SenderActionModel::new(&req.user, TypingOn))
             .await?;
         let response = ask_gemini(prompt).await?;
-
         for part in response.candidates[0].content.parts.iter() {
             res.send(TextModel::new(&req.user, &part.text)).await?;
         }
+        res.send(SenderActionModel::new(&req.user, TypingOff))
+            .await?;
     }
     Main.execute(res, req).await?;
 
@@ -240,7 +240,7 @@ async fn main() -> error::Result<()> {
         RegisterUser,
         ChooseCategory,
         ShowResponse,
-        AccountSetting
+        AccountSetting,
     ];
     russenger::launch().await?;
     Ok(())
