@@ -61,14 +61,15 @@ async fn Main(res: Res, req: Req) {
     ))
     .await?;
 
-    // check if user has a score
     match UserAccount::get(kwargs!(user_id == &req.user), &req.query.conn).await {
-        Some(score) => {
-            let message = format!("Your score is {}: {}", score.name, score.score);
+        Some(user_account) => {
+            let message = format!(
+                "username :{} score: {}",
+                user_account.name, user_account.score
+            );
             res.send(TextModel::new(&req.user, &message)).await?;
         }
         None => {
-            // if user has no score, register user
             let message = "Please provide your pseudonym in this field.";
             res.send(TextModel::new(&req.user, message)).await?;
             req.query.set_action(&req.user, RegisterUser).await;
@@ -76,12 +77,17 @@ async fn Main(res: Res, req: Req) {
         }
     }
 
-    let payload = |c| Payload::new(ChooseCategory, Some(Data::new(c, None)));
+    let quick_reply = |c| {
+        QuickReply::new(
+            c,
+            None,
+            Payload::new(ChooseCategory, Some(Data::new(c, None))),
+        )
+    };
 
-    // send quick replies of categories
-    let quick_replies: Vec<QuickReply> = ["math", "science", "history", "sport", "programming"]
+    let quick_replies = ["math", "science", "history", "sport", "programming"]
         .into_iter()
-        .map(|category| QuickReply::new(category, None, payload(category)))
+        .map(quick_reply)
         .collect();
 
     let quick_reply_model = QuickReplyModel::new(&req.user, "Choose Category", quick_replies);
@@ -92,23 +98,17 @@ async fn Main(res: Res, req: Req) {
 #[action]
 async fn AccountSetting(res: Res, req: Req) {
     let conn = req.query.conn.clone();
-    match req.data.get_value::<Settings>() {
-        Settings::ResetScoreAccount => {
-            if let Some(mut score) = UserAccount::get(kwargs!(user_id == &req.user), &conn).await {
-                score.score = 0;
-                score.update(&conn).await;
+    if let Some(mut user_account) = UserAccount::get(kwargs!(user_id == &req.user), &conn).await {
+        match req.data.get_value::<Settings>() {
+            Settings::ResetScoreAccount => {
+                user_account.score = 0;
+                user_account.update(&conn).await;
             }
-        }
-        Settings::DeleteAccount => {
-            if let Some(user_account) = UserAccount::get(kwargs!(user_id == &req.user), &conn).await
-            {
-                if !user_account.delete(&conn).await {
-                    res.send(TextModel::new(&req.user, "failed to delete user account"))
-                        .await?;
-                }
+            Settings::DeleteAccount => {
+                user_account.delete(&conn).await;
             }
-        }
-    };
+        };
+    }
     Main.execute(res, req).await?;
     Ok(())
 }
@@ -173,7 +173,7 @@ struct QuestAndAnswer {
 
 async fn send_question(res: Res, req: Req, question: &Question) -> error::Result<()> {
     res.send(TextModel::new(&req.user, &question.question))
-        .await?; // send question
+        .await?;
     let options = &question.options;
     let true_answer = &question.answer;
 
@@ -207,10 +207,10 @@ async fn ShowResponse(res: Res, req: Req) {
     } = req.data.get_value();
     let conn = req.query.conn.clone();
     if user_anwswer.to_lowercase() == true_answer.to_lowercase() {
-        // increment score
-        if let Some(mut score) = UserAccount::get(kwargs!(user_id == &req.user), &conn).await {
-            score.score += 1;
-            score.update(&conn).await;
+        if let Some(mut user_account) = UserAccount::get(kwargs!(user_id == &req.user), &conn).await
+        {
+            user_account.score += 1;
+            user_account.update(&conn).await;
         }
         res.send(TextModel::new(&req.user, "Correct!")).await?;
     } else {
