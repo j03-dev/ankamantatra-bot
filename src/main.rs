@@ -7,7 +7,7 @@ use gemini::ask_gemini;
 use rand::prelude::*;
 use russenger::{models::RussengerUser, prelude::*};
 use serde::{Deserialize, Serialize};
-use serializers::{load, Question};
+use serializers::load;
 
 #[derive(Model, FromRow, Clone)]
 pub struct UserAccount {
@@ -116,12 +116,12 @@ async fn AccountSetting(res: Res, req: Req) {
 #[action]
 async fn RegisterUser(res: Res, req: Req) {
     let username: String = req.data.get_value();
-    let is_create = UserAccount::create(
+    let message = if UserAccount::create(
         kwargs!(name = &username, user_id = &req.user),
         &req.query.conn,
     )
-    .await;
-    let message = if is_create {
+    .await
+    {
         "User registered successfully"
     } else {
         "Failed to register user"
@@ -129,6 +129,13 @@ async fn RegisterUser(res: Res, req: Req) {
     res.send(TextModel::new(&req.user, message)).await?;
     Main.execute(res, req).await?;
     Ok(())
+}
+
+#[derive(Serialize, Deserialize, Default)]
+struct QuestionAndAnswer {
+    question: String,
+    user_anwswer: String,
+    true_answer: String,
 }
 
 #[action]
@@ -144,11 +151,11 @@ async fn ChooseCategory(res: Res, req: Req) {
 
     let category: String = req.data.get_value();
     let questions = match category.as_str() {
-        "math" => &data.math,
-        "science" => &data.science,
-        "history" => &data.history,
-        "sport" => &data.sports,
-        "programming" => &data.programming,
+        "math" => data.math,
+        "science" => data.science,
+        "history" => data.history,
+        "sport" => data.sports,
+        "programming" => data.programming,
         _ => {
             let message = "Invalid category";
             res.send(TextModel::new(&req.user, message)).await?;
@@ -159,48 +166,41 @@ async fn ChooseCategory(res: Res, req: Req) {
     let index = rand::thread_rng().gen_range(0..questions.len());
     let question = &questions[index];
 
-    send_question(res, req, question).await?;
-
-    Ok(())
-}
-
-#[derive(Serialize, Deserialize, Default)]
-struct QuestAndAnswer {
-    question: String,
-    user_anwswer: String,
-    true_answer: String,
-}
-
-async fn send_question(res: Res, req: Req, question: &Question) -> error::Result<()> {
     res.send(TextModel::new(&req.user, &question.question))
         .await?;
+
     let options = &question.options;
     let true_answer = &question.answer;
 
-    let payload = |value| Payload::new(ShowResponse, Some(Data::new(value, None)));
+    let quick_reply = |qa: QuestionAndAnswer| {
+        QuickReply::new(
+            &qa.user_anwswer.clone(),
+            None,
+            Payload::new(ShowResponse, Some(Data::new(qa, None))),
+        )
+    };
 
     let quick_replies = options
         .iter()
         .map(|option| {
-            QuickReply::new(
-                &option.to_string(),
-                None,
-                payload(QuestAndAnswer {
-                    question: question.question.clone(),
-                    user_anwswer: option.to_string(),
-                    true_answer: true_answer.to_string(),
-                }),
-            )
+            quick_reply(QuestionAndAnswer {
+                question: question.question.clone(),
+                true_answer: true_answer.to_string(),
+                user_anwswer: option.to_string(),
+            })
         })
         .collect();
+
     let quick_reply_model = QuickReplyModel::new(&req.user, "Choose an option", quick_replies);
+
     res.send(quick_reply_model).await?;
+
     Ok(())
 }
 
 #[action]
 async fn ShowResponse(res: Res, req: Req) {
-    let QuestAndAnswer {
+    let QuestionAndAnswer {
         question,
         user_anwswer,
         true_answer,
@@ -218,6 +218,8 @@ async fn ShowResponse(res: Res, req: Req) {
         let message = format!("The answer is : {true_answer}");
         res.send(TextModel::new(&req.user, &message)).await?;
         let prompt = format!("The question is {question}, explain to me why: {true_answer} is the right answer, in one paragraph");
+        res.send(SenderActionModel::new(&req.user, TypingOn))
+            .await?;
         let response = ask_gemini(prompt).await?;
 
         for part in response.candidates[0].content.parts.iter() {
