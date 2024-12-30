@@ -5,7 +5,7 @@ mod test;
 
 use gemini::ask_gemini;
 use rand::prelude::*;
-use russenger::{models::RussengerUser, prelude::*};
+use russenger::{models::RussengerUser, prelude::*, Add};
 use serde::{Deserialize, Serialize};
 use serializers::load;
 
@@ -14,14 +14,10 @@ pub struct UserAccount {
     #[model(primary_key = true, auto = true)]
     pub id: Integer,
 
-    #[model(unique = true, null = false, size = 20)]
+    #[model(unique = true, size = 20)]
     pub name: String,
 
-    #[model(
-        unique = true,
-        null = false,
-        foreign_key = "RussengerUser.facebook_user_id"
-    )]
+    #[model(unique = true, foreign_key = "RussengerUser.facebook_user_id")]
     pub user_id: String,
 
     #[model(default = 0)]
@@ -36,7 +32,7 @@ enum Settings {
 }
 
 #[action]
-async fn Main(res: Res, req: Req) {
+async fn index(res: Res, req: Req) -> Result<()> {
     res.send(GetStartedButtonModel::new(Payload::default()))
         .await?;
 
@@ -46,16 +42,13 @@ async fn Main(res: Res, req: Req) {
             Button::Postback {
                 title: "Reset Score".into(),
                 payload: Payload::new(
-                    AccountSetting,
+                    "/setting",
                     Some(Data::new(Settings::ResetScoreAccount, None)),
                 ),
             },
             Button::Postback {
                 title: "Delete Account".into(),
-                payload: Payload::new(
-                    AccountSetting,
-                    Some(Data::new(Settings::DeleteAccount, None)),
-                ),
+                payload: Payload::new("/setting", Some(Data::new(Settings::DeleteAccount, None))),
             },
         ],
     ))
@@ -71,7 +64,7 @@ async fn Main(res: Res, req: Req) {
         None => {
             let message = "Please provide your pseudonym in this field.";
             res.send(TextModel::new(&req.user, message)).await?;
-            req.query.set_action(&req.user, RegisterUser).await;
+            req.query.set_action(&req.user, "/register").await;
             return Ok(());
         }
     }
@@ -80,7 +73,7 @@ async fn Main(res: Res, req: Req) {
         QuickReply::new(
             c,
             None,
-            Payload::new(ChooseCategory, Some(Data::new(c, None))),
+            Payload::new("/choose_category", Some(Data::new(c, None))),
         )
     };
 
@@ -95,7 +88,7 @@ async fn Main(res: Res, req: Req) {
 }
 
 #[action]
-async fn AccountSetting(res: Res, req: Req) {
+async fn action_setting(res: Res, req: Req) -> Result<()> {
     let conn = req.query.conn.clone();
     if let Some(mut user_account) = UserAccount::get(kwargs!(user_id == &req.user), &conn).await {
         match req.data.get_value::<Settings>() {
@@ -108,12 +101,12 @@ async fn AccountSetting(res: Res, req: Req) {
             }
         };
     }
-    Main.execute(res, req).await?;
+    index(res, req).await?;
     Ok(())
 }
 
 #[action]
-async fn RegisterUser(res: Res, req: Req) {
+async fn register(res: Res, req: Req) -> Result<()> {
     let username: String = req.data.get_value();
     let message = if UserAccount::create(
         kwargs!(name = &username, user_id = &req.user),
@@ -126,7 +119,7 @@ async fn RegisterUser(res: Res, req: Req) {
         "Failed to register user"
     };
     res.send(TextModel::new(&req.user, message)).await?;
-    Main.execute(res, req).await?;
+    index(res, req).await?;
     Ok(())
 }
 
@@ -138,7 +131,7 @@ struct QuestionAndAnswer {
 }
 
 #[action]
-async fn ChooseCategory(res: Res, req: Req) {
+async fn choose_category(res: Res, req: Req) -> Result<()> {
     let data = match load() {
         Ok(data) => data,
         Err(err) => {
@@ -175,7 +168,7 @@ async fn ChooseCategory(res: Res, req: Req) {
         QuickReply::new(
             &qa.user_anwswer.clone(),
             None,
-            Payload::new(ShowResponse, Some(Data::new(qa, None))),
+            Payload::new("/response", Some(Data::new(qa, None))),
         )
     };
 
@@ -198,7 +191,7 @@ async fn ChooseCategory(res: Res, req: Req) {
 }
 
 #[action]
-async fn ShowResponse(res: Res, req: Req) {
+async fn show_response(res: Res, req: Req) -> Result<()> {
     let QuestionAndAnswer {
         question,
         user_anwswer,
@@ -226,22 +219,24 @@ async fn ShowResponse(res: Res, req: Req) {
         res.send(SenderActionModel::new(&req.user, TypingOff))
             .await?;
     }
-    Main.execute(res, req).await?;
+    index(res, req).await?;
 
     Ok(())
 }
 
 #[russenger::main]
 async fn main() -> error::Result<()> {
-    let conn = Database::new().await.conn;
+    let database = Database::new().await?;
+    let conn = database.conn;
     migrate!([RussengerUser, UserAccount], &conn);
-    russenger::actions![
-        Main,
-        RegisterUser,
-        ChooseCategory,
-        ShowResponse,
-        AccountSetting,
-    ];
+
+    let mut app = russenger::app.lock().await;
+    app.add("/", index);
+    app.add("/register", register);
+    app.add("/setting", action_setting);
+    app.add("/choose_category", choose_category);
+    app.add("/response", show_response);
+
     russenger::launch().await?;
     Ok(())
 }
