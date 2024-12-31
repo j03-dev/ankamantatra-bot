@@ -3,6 +3,7 @@ mod serializers;
 #[cfg(test)]
 mod test;
 
+use gemini::ask_gemini;
 use rand::prelude::*;
 use russenger::{models::RussengerUser, prelude::*, App};
 use serde::{Deserialize, Serialize};
@@ -192,9 +193,9 @@ async fn choose_category(res: Res, req: Req) -> Result<()> {
 #[action]
 async fn show_response(res: Res, req: Req) -> Result<()> {
     let QuestionAndAnswer {
+        question,
         user_anwswer,
         true_answer,
-        ..
     } = req.data.get_value();
     let conn = req.query.conn.clone();
     if user_anwswer.to_lowercase() == true_answer.to_lowercase() {
@@ -208,6 +209,14 @@ async fn show_response(res: Res, req: Req) -> Result<()> {
         res.send(TextModel::new(&req.user, "Incorrect!")).await?;
         let message = format!("The answer is : {true_answer}");
         res.send(TextModel::new(&req.user, &message)).await?;
+        let prompt = format!("The question is {question}, explain to me why: {true_answer} is the right answer, in one paragraph");
+        let response = ask_gemini(prompt).await?;
+
+        if let Some(candidate) = response.candidates.first() {
+            if let Some(part) = candidate.content.parts.first() {
+                res.send(TextModel::new(&req.user, &part.text)).await?;
+            }
+        }
     }
 
     index(res, req).await?;
