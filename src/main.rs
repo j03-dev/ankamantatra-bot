@@ -4,7 +4,7 @@ mod serializers;
 mod test;
 
 use rand::prelude::*;
-use russenger::{core::action::Router, models::RussengerUser, prelude::*, Add, AppState};
+use russenger::{models::RussengerUser, prelude::*, App};
 use serde::{Deserialize, Serialize};
 use serializers::load;
 
@@ -100,7 +100,7 @@ async fn action_setting(res: Res, req: Req) -> Result<()> {
             }
         };
     }
-    res.redirect("/").await?;
+    index(res, req).await?;
     Ok(())
 }
 
@@ -118,7 +118,7 @@ async fn register(res: Res, req: Req) -> Result<()> {
         "Failed to register user"
     };
     res.send(TextModel::new(&req.user, message)).await?;
-    res.redirect("/").await?;
+    index(res, req).await?;
     Ok(())
 }
 
@@ -210,7 +210,7 @@ async fn show_response(res: Res, req: Req) -> Result<()> {
         res.send(TextModel::new(&req.user, &message)).await?;
     }
 
-    res.redirect("/").await?;
+    index(res, req).await?;
     Ok(())
 }
 
@@ -220,16 +220,12 @@ async fn main() -> error::Result<()> {
     let conn = database.conn;
     migrate!([RussengerUser, UserAccount], &conn);
 
-    let mut router = Router::new();
-
-    router.add("/", index);
-    router.add("/register", register);
-    router.add("/setting", action_setting);
-    router.add("/choose_category", choose_category);
-    router.add("/response", show_response);
-
-    let mut app = AppState::init().await?;
-    app.set_router(router);
+    let mut app = App::init().await?;
+    app.add("/", index).await;
+    app.add("/register", register).await;
+    app.add("/setting", action_setting).await;
+    app.add("/choose_category", choose_category).await;
+    app.add("/response", show_response).await;
 
     russenger::launch(app).await?;
     Ok(())

@@ -2071,13 +2071,13 @@ dependencies = [
 [[package]]
 name = "russenger"
 version = "0.3.4-rc"
+source = "git+https://github.com/j03-dev/russenger?branch=dev#281c39749c8472f00e9767b9f5722e6c67f99a89"
 dependencies = [
  "actix-files",
  "actix-web",
  "anyhow",
  "async-trait",
  "dotenv",
- "lazy_static",
  "reqwest",
  "rusql-alchemy",
  "russenger_macro",
@@ -2091,6 +2091,7 @@ dependencies = [
 [[package]]
 name = "russenger_macro"
 version = "0.1.2"
+source = "git+https://github.com/j03-dev/russenger?branch=dev#281c39749c8472f00e9767b9f5722e6c67f99a89"
 dependencies = [
  "proc-macro2",
  "quote",
