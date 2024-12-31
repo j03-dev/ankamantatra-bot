@@ -3,9 +3,8 @@ mod serializers;
 #[cfg(test)]
 mod test;
 
-use gemini::ask_gemini;
 use rand::prelude::*;
-use russenger::{models::RussengerUser, prelude::*, Add};
+use russenger::{core::action::Router, models::RussengerUser, prelude::*, Add, AppState};
 use serde::{Deserialize, Serialize};
 use serializers::load;
 
@@ -64,7 +63,7 @@ async fn index(res: Res, req: Req) -> Result<()> {
         None => {
             let message = "Please provide your pseudonym in this field.";
             res.send(TextModel::new(&req.user, message)).await?;
-            req.query.set_action(&req.user, "/register").await;
+            req.query.set_path(&req.user, "/register").await;
             return Ok(());
         }
     }
@@ -101,7 +100,7 @@ async fn action_setting(res: Res, req: Req) -> Result<()> {
             }
         };
     }
-    index(res, req).await?;
+    res.redirect("/").await?;
     Ok(())
 }
 
@@ -119,7 +118,7 @@ async fn register(res: Res, req: Req) -> Result<()> {
         "Failed to register user"
     };
     res.send(TextModel::new(&req.user, message)).await?;
-    index(res, req).await?;
+    res.redirect("/").await?;
     Ok(())
 }
 
@@ -193,9 +192,9 @@ async fn choose_category(res: Res, req: Req) -> Result<()> {
 #[action]
 async fn show_response(res: Res, req: Req) -> Result<()> {
     let QuestionAndAnswer {
-        question,
         user_anwswer,
         true_answer,
+        ..
     } = req.data.get_value();
     let conn = req.query.conn.clone();
     if user_anwswer.to_lowercase() == true_answer.to_lowercase() {
@@ -209,18 +208,9 @@ async fn show_response(res: Res, req: Req) -> Result<()> {
         res.send(TextModel::new(&req.user, "Incorrect!")).await?;
         let message = format!("The answer is : {true_answer}");
         res.send(TextModel::new(&req.user, &message)).await?;
-        let prompt = format!("The question is {question}, explain to me why: {true_answer} is the right answer, in one paragraph");
-        res.send(SenderActionModel::new(&req.user, TypingOn))
-            .await?;
-        let response = ask_gemini(prompt).await?;
-        for part in response.candidates[0].content.parts.iter() {
-            res.send(TextModel::new(&req.user, &part.text)).await?;
-        }
-        res.send(SenderActionModel::new(&req.user, TypingOff))
-            .await?;
     }
-    index(res, req).await?;
 
+    res.redirect("/").await?;
     Ok(())
 }
 
@@ -230,13 +220,17 @@ async fn main() -> error::Result<()> {
     let conn = database.conn;
     migrate!([RussengerUser, UserAccount], &conn);
 
-    let mut app = russenger::app.lock().await;
-    app.add("/", index);
-    app.add("/register", register);
-    app.add("/setting", action_setting);
-    app.add("/choose_category", choose_category);
-    app.add("/response", show_response);
+    let mut router = Router::new();
 
-    russenger::launch().await?;
+    router.add("/", index);
+    router.add("/register", register);
+    router.add("/setting", action_setting);
+    router.add("/choose_category", choose_category);
+    router.add("/response", show_response);
+
+    let mut app = AppState::init().await?;
+    app.set_router(router);
+
+    russenger::launch(app).await?;
     Ok(())
 }

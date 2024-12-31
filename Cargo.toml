@@ -6,10 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies.russenger]
-git = "https://github.com/j03-dev/russenger"
-version = "0.3.3-rc"
+# git = "https://github.com/j03-dev/russenger"
+version = "0.3.4-rc"
 features = ["sqlite"]
-branch = "main"
+path = "../russenger/russenger"
 
 [dependencies]
 actix-web = "^4"

@@ -2070,8 +2070,7 @@ dependencies = [
 
 [[package]]
 name = "russenger"
-version = "0.3.3-rc"
-source = "git+https://github.com/j03-dev/russenger?branch=main#78507a0fa6c03c52aa17e0f8dc9f530f13b78bd6"
+version = "0.3.4-rc"
 dependencies = [
  "actix-files",
  "actix-web",
@@ -2092,7 +2091,6 @@ dependencies = [
 [[package]]
 name = "russenger_macro"
 version = "0.1.2"
-source = "git+https://github.com/j03-dev/russenger?branch=main#78507a0fa6c03c52aa17e0f8dc9f530f13b78bd6"
 dependencies = [
  "proc-macro2",
  "quote",
