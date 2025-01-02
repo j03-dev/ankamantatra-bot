@@ -5,6 +5,7 @@ mod serializers;
 #[cfg(test)]
 mod test;
 
+use error::Context;
 use gemini::ask_gemini;
 use rand::prelude::*;
 use russenger::{prelude::*, App};
@@ -207,7 +208,7 @@ async fn response(res: Res, req: Req) -> Result<()> {
 async fn main() -> Result<()> {
     migrate::migrate().await?;
 
-    let mut app = App::init().await?;
+    let mut app = App::init().await.context("failed to initialize the app")?;
     app.add("/", index).await;
     app.add("/register", register).await;
     app.add("/setting", setting).await;
