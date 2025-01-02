@@ -1,28 +1,16 @@
 mod gemini;
+mod models;
 mod serializers;
 #[cfg(test)]
 mod test;
 
 use gemini::ask_gemini;
 use rand::prelude::*;
-use russenger::{models::RussengerUser, prelude::*, App};
+use russenger::{prelude::*, App};
 use serde::{Deserialize, Serialize};
 use serializers::load;
 
-#[derive(Model, FromRow, Clone)]
-pub struct UserAccount {
-    #[model(primary_key = true, auto = true)]
-    pub id: Integer,
-
-    #[model(unique = true, size = 20)]
-    pub name: String,
-
-    #[model(unique = true, foreign_key = "RussengerUser.facebook_user_id")]
-    pub user_id: String,
-
-    #[model(default = 0)]
-    pub score: Integer,
-}
+use crate::models::UserAccount;
 
 #[derive(Serialize, Deserialize, Default)]
 enum Settings {
@@ -41,14 +29,11 @@ async fn index(res: Res, req: Req) -> Result<()> {
         vec![
             Button::Postback {
                 title: "Reset Score".into(),
-                payload: Payload::new(
-                    "/setting",
-                    Some(Data::new(Settings::ResetScoreAccount, None)),
-                ),
+                payload: Payload::new("/setting", Some(Data::new(Settings::ResetScoreAccount))),
             },
             Button::Postback {
                 title: "Delete Account".into(),
-                payload: Payload::new("/setting", Some(Data::new(Settings::DeleteAccount, None))),
+                payload: Payload::new("/setting", Some(Data::new(Settings::DeleteAccount))),
             },
         ],
     ))
@@ -64,18 +49,12 @@ async fn index(res: Res, req: Req) -> Result<()> {
         None => {
             let message = "Please provide your pseudonym in this field.";
             res.send(TextModel::new(&req.user, message)).await?;
-            req.query.set_path(&req.user, "/register").await;
+            res.redirect("/register").await?;
             return Ok(());
         }
     }
 
-    let quick_reply = |c| {
-        QuickReply::new(
-            c,
-            None,
-            Payload::new("/choose_category", Some(Data::new(c, None))),
-        )
-    };
+    let quick_reply = |c| QuickReply::new(c, None, Payload::new("/category", Some(Data::new(c))));
 
     let quick_replies = ["math", "science", "history", "sport", "programming"]
         .into_iter()
@@ -88,7 +67,7 @@ async fn index(res: Res, req: Req) -> Result<()> {
 }
 
 #[action]
-async fn action_setting(res: Res, req: Req) -> Result<()> {
+async fn setting(res: Res, req: Req) -> Result<()> {
     let conn = req.query.conn.clone();
     if let Some(mut user_account) = UserAccount::get(kwargs!(user_id == &req.user), &conn).await {
         match req.data.get_value::<Settings>() {
@@ -126,12 +105,12 @@ async fn register(res: Res, req: Req) -> Result<()> {
 #[derive(Serialize, Deserialize, Default)]
 struct QuestionAndAnswer {
     question: String,
-    user_anwswer: String,
+    user_answer: String,
     true_answer: String,
 }
 
 #[action]
-async fn choose_category(res: Res, req: Req) -> Result<()> {
+async fn category(res: Res, req: Req) -> Result<()> {
     let data = match load() {
         Ok(data) => data,
         Err(err) => {
@@ -155,7 +134,7 @@ async fn choose_category(res: Res, req: Req) -> Result<()> {
         }
     };
 
-    let index = rand::thread_rng().gen_range(0..questions.len());
+    let index = thread_rng().gen_range(0..questions.len());
     let question = &questions[index];
 
     res.send(TextModel::new(&req.user, &question.question))
@@ -166,9 +145,9 @@ async fn choose_category(res: Res, req: Req) -> Result<()> {
 
     let quick_reply = |qa: QuestionAndAnswer| {
         QuickReply::new(
-            &qa.user_anwswer.clone(),
+            &qa.user_answer.clone(),
             None,
-            Payload::new("/response", Some(Data::new(qa, None))),
+            Payload::new("/response", Some(Data::new(qa))),
         )
     };
 
@@ -178,7 +157,7 @@ async fn choose_category(res: Res, req: Req) -> Result<()> {
             quick_reply(QuestionAndAnswer {
                 question: question.question.clone(),
                 true_answer: true_answer.to_string(),
-                user_anwswer: option.to_string(),
+                user_answer: option.to_string(),
             })
         })
         .collect();
@@ -191,14 +170,14 @@ async fn choose_category(res: Res, req: Req) -> Result<()> {
 }
 
 #[action]
-async fn show_response(res: Res, req: Req) -> Result<()> {
+async fn response(res: Res, req: Req) -> Result<()> {
     let QuestionAndAnswer {
         question,
-        user_anwswer,
+        user_answer,
         true_answer,
     } = req.data.get_value();
     let conn = req.query.conn.clone();
-    if user_anwswer.to_lowercase() == true_answer.to_lowercase() {
+    if user_answer.to_lowercase() == true_answer.to_lowercase() {
         if let Some(mut user_account) = UserAccount::get(kwargs!(user_id == &req.user), &conn).await
         {
             user_account.score += 1;
@@ -224,18 +203,14 @@ async fn show_response(res: Res, req: Req) -> Result<()> {
 }
 
 #[russenger::main]
-async fn main() -> error::Result<()> {
-    let database = Database::new().await?;
-    let conn = database.conn;
-    migrate!([RussengerUser, UserAccount], &conn);
-
+async fn main() -> Result<()> {
     let mut app = App::init().await?;
     app.add("/", index).await;
     app.add("/register", register).await;
-    app.add("/setting", action_setting).await;
-    app.add("/choose_category", choose_category).await;
-    app.add("/response", show_response).await;
+    app.add("/setting", setting).await;
+    app.add("/category", category).await;
+    app.add("/response", response).await;
 
-    russenger::launch(app).await?;
+    launch(app).await?;
     Ok(())
 }
