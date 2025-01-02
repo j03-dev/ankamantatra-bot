@@ -1,4 +1,5 @@
 mod gemini;
+mod migrate;
 mod models;
 mod serializers;
 #[cfg(test)]
@@ -204,6 +205,8 @@ async fn response(res: Res, req: Req) -> Result<()> {
 
 #[russenger::main]
 async fn main() -> Result<()> {
+    migrate::migrate().await?;
+
     let mut app = App::init().await?;
     app.add("/", index).await;
     app.add("/register", register).await;
