@@ -5,7 +5,6 @@ mod serializers;
 #[cfg(test)]
 mod test;
 
-use error::Context;
 use gemini::ask_gemini;
 use rand::prelude::*;
 use russenger::{prelude::*, App};
@@ -190,7 +189,7 @@ async fn response(res: Res, req: Req) -> Result<()> {
 async fn main() -> Result<()> {
     migrate::migrate().await?;
 
-    let mut app = App::init().await.context("failed to initialize the app")?;
+    let mut app = App::init().await?;
     app.add("/home", home).await;
     app.add("/register", register).await;
     app.add("/setting", setting).await;
@@ -199,6 +198,8 @@ async fn main() -> Result<()> {
 
     app.add("/", |res: Res, req: Req| {
         Box::pin(async move {
+            let payload = |setting| Payload::new("/setting", Some(Data::new(setting)));
+
             res.send(GetStartedButtonModel::new(Payload::default()))
                 .await?;
 
@@ -207,14 +208,11 @@ async fn main() -> Result<()> {
                 vec![
                     Button::Postback {
                         title: "Reset Score".into(),
-                        payload: Payload::new(
-                            "/setting",
-                            Some(Data::new(Settings::ResetScoreAccount)),
-                        ),
+                        payload: payload(Settings::ResetScoreAccount),
                     },
                     Button::Postback {
                         title: "Delete Account".into(),
-                        payload: Payload::new("/setting", Some(Data::new(Settings::DeleteAccount))),
+                        payload: payload(Settings::DeleteAccount),
                     },
                 ],
             ))
