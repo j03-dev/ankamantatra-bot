@@ -219,6 +219,7 @@ async fn main() -> Result<()> {
                 ],
             ))
             .await?;
+            home(res, req).await?;
             Ok(())
         })
     })
