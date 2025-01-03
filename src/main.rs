@@ -22,25 +22,7 @@ enum Settings {
 }
 
 #[action]
-async fn index(res: Res, req: Req) -> Result<()> {
-    res.send(GetStartedButtonModel::new(Payload::default()))
-        .await?;
-
-    res.send(PersistentMenuModel::new(
-        &req.user,
-        vec![
-            Button::Postback {
-                title: "Reset Score".into(),
-                payload: Payload::new("/setting", Some(Data::new(Settings::ResetScoreAccount))),
-            },
-            Button::Postback {
-                title: "Delete Account".into(),
-                payload: Payload::new("/setting", Some(Data::new(Settings::DeleteAccount))),
-            },
-        ],
-    ))
-    .await?;
-
+async fn home(res: Res, req: Req) -> Result<()> {
     match UserAccount::get(kwargs!(user_id == &req.user), &req.query.conn).await {
         Some(user_account) => {
             let username = format!("username:{}", user_account.name);
@@ -82,7 +64,7 @@ async fn setting(res: Res, req: Req) -> Result<()> {
             }
         };
     }
-    index(res, req).await?;
+    home(res, req).await?;
     Ok(())
 }
 
@@ -100,7 +82,7 @@ async fn register(res: Res, req: Req) -> Result<()> {
         "Failed to register user"
     };
     res.send(TextModel::new(&req.user, message)).await?;
-    index(res, req).await?;
+    home(res, req).await?;
     Ok(())
 }
 
@@ -200,7 +182,7 @@ async fn response(res: Res, req: Req) -> Result<()> {
         }
     }
 
-    index(res, req).await?;
+    home(res, req).await?;
     Ok(())
 }
 
@@ -209,11 +191,38 @@ async fn main() -> Result<()> {
     migrate::migrate().await?;
 
     let mut app = App::init().await.context("failed to initialize the app")?;
-    app.add("/", index).await;
+    app.add("/home", home).await;
     app.add("/register", register).await;
     app.add("/setting", setting).await;
     app.add("/category", category).await;
     app.add("/response", response).await;
+
+    app.add("/", |res: Res, req: Req| {
+        Box::pin(async move {
+            res.send(GetStartedButtonModel::new(Payload::default()))
+                .await?;
+
+            res.send(PersistentMenuModel::new(
+                &req.user,
+                vec![
+                    Button::Postback {
+                        title: "Reset Score".into(),
+                        payload: Payload::new(
+                            "/setting",
+                            Some(Data::new(Settings::ResetScoreAccount)),
+                        ),
+                    },
+                    Button::Postback {
+                        title: "Delete Account".into(),
+                        payload: Payload::new("/setting", Some(Data::new(Settings::DeleteAccount))),
+                    },
+                ],
+            ))
+            .await?;
+            Ok(())
+        })
+    })
+    .await;
 
     launch(app).await?;
     Ok(())
