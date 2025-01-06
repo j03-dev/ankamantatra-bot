@@ -5,6 +5,7 @@ mod serializers;
 #[cfg(test)]
 mod test;
 
+use error::Context;
 use gemini::ask_gemini;
 use rand::prelude::*;
 use russenger::{prelude::*, App};
@@ -18,6 +19,7 @@ enum Settings {
     #[default]
     ResetScoreAccount,
     DeleteAccount,
+    ChooseCategory,
 }
 
 #[action]
@@ -28,24 +30,20 @@ async fn home(res: Res, req: Req) -> Result<()> {
             res.send(TextModel::new(&req.user, &username)).await?;
             let score = format!("score:{}", user_account.score);
             res.send(TextModel::new(&req.user, &score)).await?;
+            if user_account.category.is_none() {
+                let req = req.new_from(Data::new(Settings::ChooseCategory));
+                setting(res, req).await?;
+            } else {
+                ask_question(res, req).await?;
+            }
         }
         None => {
             let message = "Please provide your pseudonym in this field.";
             res.send(TextModel::new(&req.user, message)).await?;
             res.redirect("/register").await?;
-            return Ok(());
         }
     }
 
-    let quick_reply = |c| QuickReply::new(c, None, Payload::new("/category", Some(Data::new(c))));
-
-    let quick_replies = ["math", "science", "history", "sport", "programming"]
-        .into_iter()
-        .map(quick_reply)
-        .collect();
-
-    let quick_reply_model = QuickReplyModel::new(&req.user, "Choose Category", quick_replies);
-    res.send(quick_reply_model).await?;
     Ok(())
 }
 
@@ -60,6 +58,25 @@ async fn setting(res: Res, req: Req) -> Result<()> {
             }
             Settings::DeleteAccount => {
                 user_account.delete(&conn).await;
+            }
+            Settings::ChooseCategory => {
+                let quick_reply = |c| {
+                    QuickReply::new(
+                        c,
+                        None,
+                        Payload::new("/choose_category", Some(Data::new(c))),
+                    )
+                };
+
+                let quick_replies = ["math", "science", "history", "sport", "programming"]
+                    .into_iter()
+                    .map(quick_reply)
+                    .collect();
+
+                let quick_reply_model =
+                    QuickReplyModel::new(&req.user, "Choose Category", quick_replies);
+                res.send(quick_reply_model).await?;
+                return Ok(());
             }
         };
     }
@@ -93,7 +110,7 @@ struct QuestionAndAnswer {
 }
 
 #[action]
-async fn category(res: Res, req: Req) -> Result<()> {
+async fn ask_question(res: Res, req: Req) -> Result<()> {
     let data = match load() {
         Ok(data) => data,
         Err(err) => {
@@ -103,8 +120,15 @@ async fn category(res: Res, req: Req) -> Result<()> {
         }
     };
 
-    let category: String = req.data.get_value();
-    let questions = match category.as_str() {
+    let user_account = UserAccount::get(kwargs!(user_id = &req.user), &req.query.conn)
+        .await
+        .context("failed to get user")?;
+
+    let questions = match user_account
+        .category
+        .context("category not found")?
+        .as_str()
+    {
         "math" => data.math,
         "science" => data.science,
         "history" => data.history,
@@ -185,6 +209,20 @@ async fn response(res: Res, req: Req) -> Result<()> {
     Ok(())
 }
 
+#[action]
+async fn choose_category(res: Res, req: Req) -> Result<()> {
+    let category: String = req.data.get_value();
+    let conn = &req.query.conn;
+    if let Some(mut user_account) = UserAccount::get(kwargs!(user_id == &req.user), conn).await {
+        user_account.category = Some(category);
+        user_account.update(conn).await;
+    }
+    res.send(TextModel::new(&req.user, "Category is set"))
+        .await?;
+    ask_question(res, req).await?;
+    Ok(())
+}
+
 #[russenger::main]
 async fn main() -> Result<()> {
     migrate::migrate().await?;
@@ -193,9 +231,8 @@ async fn main() -> Result<()> {
     app.add("/home", home).await;
     app.add("/register", register).await;
     app.add("/setting", setting).await;
-    app.add("/category", category).await;
+    app.add("/ask_question", ask_question).await;
     app.add("/response", response).await;
-
     app.add("/", |res: Res, req: Req| {
         Box::pin(async move {
             let payload = |setting| Payload::new("/setting", Some(Data::new(setting)));
@@ -214,6 +251,10 @@ async fn main() -> Result<()> {
                         title: "Delete Account".into(),
                         payload: payload(Settings::DeleteAccount),
                     },
+                    Button::Postback {
+                        title: "Change Category".into(),
+                        payload: payload(Settings::ChooseCategory),
+                    },
                 ],
             ))
             .await?;
@@ -222,6 +263,7 @@ async fn main() -> Result<()> {
         })
     })
     .await;
+    app.add("/choose_category", choose_category).await;
 
     launch(app).await?;
     Ok(())

@@ -15,4 +15,7 @@ pub struct UserAccount {
 
     #[model(default = 0)]
     pub score: Integer,
+
+    #[model(size = 20)]
+    pub category: Option<String>,
 }
