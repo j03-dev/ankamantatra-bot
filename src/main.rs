@@ -23,25 +23,55 @@ enum Settings {
 }
 
 #[action]
+async fn index(res: Res, req: Req) -> Result<()> {
+    let payload = |setting| Payload::new("/setting", Some(Data::new(setting)));
+
+    res.send(GetStartedButtonModel::new(Payload::default()))
+        .await?;
+
+    let persistent_menu = PersistentMenuModel::new(
+        &req.user,
+        vec![
+            Button::Postback {
+                title: "Reset Score".into(),
+                payload: payload(Settings::ResetScoreAccount),
+            },
+            Button::Postback {
+                title: "Delete Account".into(),
+                payload: payload(Settings::DeleteAccount),
+            },
+            Button::Postback {
+                title: "Change Category".into(),
+                payload: payload(Settings::ChooseCategory),
+            },
+        ],
+    );
+    res.send(persistent_menu).await?;
+
+    home(res, req).await?;
+
+    Ok(())
+}
+
+#[action]
 async fn home(res: Res, req: Req) -> Result<()> {
-    match UserAccount::get(kwargs!(user_id == &req.user), &req.query.conn).await {
-        Some(user_account) => {
-            let username = format!("username:{}", user_account.name);
-            res.send(TextModel::new(&req.user, &username)).await?;
-            let score = format!("score:{}", user_account.score);
-            res.send(TextModel::new(&req.user, &score)).await?;
-            if user_account.category.is_none() {
-                let req = req.new_from(Data::new(Settings::ChooseCategory));
-                setting(res, req).await?;
-            } else {
-                ask_question(res, req).await?;
-            }
+    if let Some(user_account) =
+        UserAccount::get(kwargs!(user_id == &req.user), &req.query.conn).await
+    {
+        let username = format!("username:{}", user_account.name);
+        res.send(TextModel::new(&req.user, &username)).await?;
+        let score = format!("score:{}", user_account.score);
+        res.send(TextModel::new(&req.user, &score)).await?;
+        if user_account.category.is_none() {
+            let req = req.new_from(Data::new(Settings::ChooseCategory));
+            setting(res, req).await?;
+        } else {
+            ask_question(res, req).await?;
         }
-        None => {
-            let message = "Please provide your pseudonym in this field.";
-            res.send(TextModel::new(&req.user, message)).await?;
-            res.redirect("/register").await?;
-        }
+    } else {
+        let message = "Please provide your pseudonym in this field.";
+        res.send(TextModel::new(&req.user, message)).await?;
+        res.redirect("/register").await?;
     }
 
     Ok(())
@@ -227,44 +257,18 @@ async fn choose_category(res: Res, req: Req) -> Result<()> {
 async fn main() -> Result<()> {
     migrate::migrate().await?;
 
-    let mut app = App::init().await?;
-    app.add("/home", home).await;
-    app.add("/register", register).await;
-    app.add("/setting", setting).await;
-    app.add("/ask_question", ask_question).await;
-    app.add("/response", response).await;
-    app.add("/", |res: Res, req: Req| {
-        Box::pin(async move {
-            let payload = |setting| Payload::new("/setting", Some(Data::new(setting)));
+    App::init()
+        .await?
+        .attach(router![
+            ("/", index),
+            ("/home", home),
+            ("/register", register),
+            ("/setting", setting),
+            ("/ask_question", ask_question),
+            ("/response", response)
+        ])
+        .launch()
+        .await?;
 
-            res.send(GetStartedButtonModel::new(Payload::default()))
-                .await?;
-
-            res.send(PersistentMenuModel::new(
-                &req.user,
-                vec![
-                    Button::Postback {
-                        title: "Reset Score".into(),
-                        payload: payload(Settings::ResetScoreAccount),
-                    },
-                    Button::Postback {
-                        title: "Delete Account".into(),
-                        payload: payload(Settings::DeleteAccount),
-                    },
-                    Button::Postback {
-                        title: "Change Category".into(),
-                        payload: payload(Settings::ChooseCategory),
-                    },
-                ],
-            ))
-            .await?;
-            home(res, req).await?;
-            Ok(())
-        })
-    })
-    .await;
-    app.add("/choose_category", choose_category).await;
-
-    launch(app).await?;
     Ok(())
 }
