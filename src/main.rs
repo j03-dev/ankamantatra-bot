@@ -259,14 +259,15 @@ async fn main() -> Result<()> {
 
     App::init()
         .await?
-        .attach(router![
-            ("/", index),
-            ("/home", home),
-            ("/register", register),
-            ("/setting", setting),
-            ("/ask_question", ask_question),
-            ("/response", response)
-        ])
+        .attach(
+            Router::new()
+                .add("/", index)
+                .add("/home", home)
+                .add("/register", register)
+                .add("/setting", setting)
+                .add("/ask_question", ask_question)
+                .add("/response", response),
+        )
         .launch()
         .await?;
 
