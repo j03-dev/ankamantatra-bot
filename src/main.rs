@@ -265,6 +265,7 @@ async fn main() -> Result<()> {
                 .add("/home", home)
                 .add("/register", register)
                 .add("/setting", setting)
+                .add("/choose_category", choose_category)
                 .add("/ask_question", ask_question)
                 .add("/response", response),
         )
