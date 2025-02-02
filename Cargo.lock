@@ -1779,9 +1779,9 @@ dependencies = [
 
 [[package]]
 name = "rusql-alchemy"
-version = "0.4.1-rc"
+version = "0.4.2-rc"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f2cf08cc93646eef47ec50ec6a7c500559df05378fcc5d9512e549122039e8c"
+checksum = "1f4b2443352c3f832559856375577b069419b7c9aa6274cb03ccc5d87f3b5d56"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1790,15 +1790,16 @@ dependencies = [
  "rusql-alchemy-macro",
  "serde",
  "serde_json",
+ "sqlformat",
  "sqlx",
  "tokio",
 ]
 
 [[package]]
 name = "rusql-alchemy-macro"
-version = "0.4.1-rc"
+version = "0.4.2-rc"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8b7507161d1778cc718d4122804137e63e2d98df3806505f0c19db8e34d1a03"
+checksum = "a8361c96c40299c851fb3beaafab42fa789cebb7e873d8265079880c476500bb"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1807,8 +1808,8 @@ dependencies = [
 
 [[package]]
 name = "russenger"
-version = "0.3.5-rc"
-source = "git+https://github.com/j03-dev/russenger?branch=dev#8c90fe10a24acd802d74cd8e0d5358d8898f82c6"
+version = "0.3.6-rc"
+source = "git+https://github.com/j03-dev/russenger?branch=dev#9d5c42b4311a135b96d2c799552451c06c37a85b"
 dependencies = [
  "actix-files",
  "actix-web",
@@ -1816,21 +1817,10 @@ dependencies = [
  "dotenv",
  "reqwest",
  "rusql-alchemy",
- "russenger_macro",
  "serde",
  "serde_json",
  "sqlx",
  "tokio",
-]
-
-[[package]]
-name = "russenger_macro"
-version = "0.1.2"
-source = "git+https://github.com/j03-dev/russenger?branch=dev#8c90fe10a24acd802d74cd8e0d5358d8898f82c6"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.96",
 ]
 
 [[package]]
@@ -2093,6 +2083,16 @@ checksum = "d91ed6c858b01f942cd56b37a94b3e0a1798290327d1236e4d9cf4eaca44d29d"
 dependencies = [
  "base64ct",
  "der",
+]
+
+[[package]]
+name = "sqlformat"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a0d7b3e8a3b6f2ee93ac391a0f757c13790caa0147892e3545cd549dd5b54bc0"
+dependencies = [
+ "unicode_categories",
+ "winnow",
 ]
 
 [[package]]
@@ -2639,6 +2639,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e70f2a8b45122e719eb623c01822704c4e0907e7e426a05927e1a1cfff5b75d0"
 
 [[package]]
+name = "unicode_categories"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "39ec24b3121d976906ece63c9daad25b85969647682eee313cb5779fdd69e14e"
+
+[[package]]
 name = "untrusted"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2983,6 +2989,15 @@ name = "windows_x86_64_msvc"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
+
+[[package]]
+name = "winnow"
+version = "0.6.26"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e90edd2ac1aa278a5c4599b1d89cf03074b610800f866d4026dc199d7929a28"
+dependencies = [
+ "memchr",
+]
 
 [[package]]
 name = "write16"

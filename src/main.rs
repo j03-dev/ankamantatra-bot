@@ -22,7 +22,6 @@ enum Settings {
     ChooseCategory,
 }
 
-#[action]
 async fn index(res: Res, req: Req) -> Result<()> {
     let payload = |setting| Payload::new("/setting", Some(Data::new(setting)));
 
@@ -53,10 +52,9 @@ async fn index(res: Res, req: Req) -> Result<()> {
     Ok(())
 }
 
-#[action]
 async fn home(res: Res, req: Req) -> Result<()> {
     if let Some(user_account) =
-        UserAccount::get(kwargs!(user_id == &req.user), &req.query.conn).await
+        UserAccount::get(kwargs!(user_id == &req.user), &req.query.conn).await?
     {
         let username = format!("username:{}", user_account.name);
         res.send(TextModel::new(&req.user, &username)).await?;
@@ -77,17 +75,16 @@ async fn home(res: Res, req: Req) -> Result<()> {
     Ok(())
 }
 
-#[action]
 async fn setting(res: Res, req: Req) -> Result<()> {
     let conn = req.query.conn.clone();
-    if let Some(mut user_account) = UserAccount::get(kwargs!(user_id == &req.user), &conn).await {
+    if let Some(mut user_account) = UserAccount::get(kwargs!(user_id == &req.user), &conn).await? {
         match req.data.get_value::<Settings>() {
             Settings::ResetScoreAccount => {
                 user_account.score = 0;
-                user_account.update(&conn).await;
+                user_account.update(&conn).await?;
             }
             Settings::DeleteAccount => {
-                user_account.delete(&conn).await;
+                user_account.delete(&conn).await?;
             }
             Settings::ChooseCategory => {
                 let quick_reply = |c| {
@@ -110,11 +107,10 @@ async fn setting(res: Res, req: Req) -> Result<()> {
             }
         };
     }
-    home(res, req).await?;
+    Box::pin(home(res, req)).await?;
     Ok(())
 }
 
-#[action]
 async fn register(res: Res, req: Req) -> Result<()> {
     let username: String = req.data.get_value();
     let message = if UserAccount::create(
@@ -122,6 +118,7 @@ async fn register(res: Res, req: Req) -> Result<()> {
         &req.query.conn,
     )
     .await
+    .is_ok()
     {
         "User registered successfully"
     } else {
@@ -139,7 +136,6 @@ struct QuestionAndAnswer {
     true_answer: String,
 }
 
-#[action]
 async fn ask_question(res: Res, req: Req) -> Result<()> {
     let data = match load() {
         Ok(data) => data,
@@ -151,7 +147,7 @@ async fn ask_question(res: Res, req: Req) -> Result<()> {
     };
 
     let user_account = UserAccount::get(kwargs!(user_id = &req.user), &req.query.conn)
-        .await
+        .await?
         .context("failed to get user")?;
 
     let questions = match user_account
@@ -206,7 +202,6 @@ async fn ask_question(res: Res, req: Req) -> Result<()> {
     Ok(())
 }
 
-#[action]
 async fn response(res: Res, req: Req) -> Result<()> {
     let QuestionAndAnswer {
         question,
@@ -215,10 +210,11 @@ async fn response(res: Res, req: Req) -> Result<()> {
     } = req.data.get_value();
     let conn = req.query.conn.clone();
     if user_answer.to_lowercase() == true_answer.to_lowercase() {
-        if let Some(mut user_account) = UserAccount::get(kwargs!(user_id == &req.user), &conn).await
+        if let Some(mut user_account) =
+            UserAccount::get(kwargs!(user_id == &req.user), &conn).await?
         {
             user_account.score += 1;
-            user_account.update(&conn).await;
+            user_account.update(&conn).await?;
         }
         res.send(TextModel::new(&req.user, "Correct!")).await?;
     } else {
@@ -239,13 +235,12 @@ async fn response(res: Res, req: Req) -> Result<()> {
     Ok(())
 }
 
-#[action]
 async fn choose_category(res: Res, req: Req) -> Result<()> {
     let category: String = req.data.get_value();
     let conn = &req.query.conn;
-    if let Some(mut user_account) = UserAccount::get(kwargs!(user_id == &req.user), conn).await {
+    if let Some(mut user_account) = UserAccount::get(kwargs!(user_id == &req.user), conn).await? {
         user_account.category = Some(category);
-        user_account.update(conn).await;
+        user_account.update(conn).await?;
     }
     res.send(TextModel::new(&req.user, "Category is set"))
         .await?;
