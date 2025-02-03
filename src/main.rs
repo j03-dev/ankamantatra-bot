@@ -248,7 +248,7 @@ async fn choose_category(res: Res, req: Req) -> Result<()> {
     Ok(())
 }
 
-#[russenger::main]
+#[tokio::main]
 async fn main() -> Result<()> {
     migrate::migrate().await?;
 
