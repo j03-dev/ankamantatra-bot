@@ -1821,7 +1821,7 @@ dependencies = [
 [[package]]
 name = "russenger"
 version = "0.3.6-rc"
-source = "git+https://github.com/j03-dev/russenger?branch=dev#69b9b6ceec425008582bfe4afc960166eacb195c"
+source = "git+https://github.com/j03-dev/russenger?branch=dev#411e419f3e165b2bfc4fce2a9baf902ecd2f5be1"
 dependencies = [
  "actix-files",
  "actix-web",
