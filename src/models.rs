@@ -3,7 +3,7 @@ pub use russenger::models::RussengerUser;
 use russenger::prelude::*;
 
 #[derive(Model, FromRow, Clone)]
-pub struct UserAccount {
+pub struct User {
     #[model(primary_key = true, auto = true)]
     pub id: Integer,
 
@@ -16,6 +16,6 @@ pub struct UserAccount {
     #[model(default = 0)]
     pub score: Integer,
 
-    #[model(size = 20)]
+    #[model(size = 20, default = "math")]
     pub category: Option<String>,
 }

@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies.russenger]
-version = "0.3.6-rc"
+version = "0.3.0"
 git = "https://github.com/j03-dev/russenger"
 features = ["sqlite"]
 branch = "dev"
@@ -17,4 +17,4 @@ rand = "0.8.5"
 serde_json = "^1.0.117"
 serde = { version = "1.0.202", features = ["derive"] }
 reqwest = { version = "0.12.4", features = ["json"] }
-tokio = { version = "1.43.0", feature = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.43.0", features = ["macros", "rt-multi-thread"] }

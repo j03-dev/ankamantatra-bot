@@ -12,7 +12,7 @@ use russenger::{prelude::*, App};
 use serde::{Deserialize, Serialize};
 use serializers::load;
 
-use crate::models::UserAccount;
+use crate::models::User;
 
 #[derive(Serialize, Deserialize, Default)]
 enum Settings {
@@ -23,11 +23,9 @@ enum Settings {
 }
 
 async fn index(res: Res, req: Req) -> Result<()> {
-    let payload = |setting| Payload::new("/setting", Some(Data::new(setting)));
-
-    res.send(GetStartedButtonModel::new(Payload::default()))
+    res.send(GetStartedButtonModel::new(Payload::new("/home", None)))
         .await?;
-
+    let payload = |setting| Payload::new("/setting", Some(Data::new(setting)));
     let persistent_menu = PersistentMenuModel::new(
         &req.user,
         vec![
@@ -46,26 +44,16 @@ async fn index(res: Res, req: Req) -> Result<()> {
         ],
     );
     res.send(persistent_menu).await?;
-
-    home(res, req).await?;
-
     Ok(())
 }
 
 async fn home(res: Res, req: Req) -> Result<()> {
-    if let Some(user_account) =
-        UserAccount::get(kwargs!(user_id == &req.user), &req.query.conn).await?
-    {
-        let username = format!("username:{}", user_account.name);
+    if let Some(user) = User::get(kwargs!(user_id == &req.user), &req.query.conn).await? {
+        let username = format!("username:{}", user.name);
         res.send(TextModel::new(&req.user, &username)).await?;
-        let score = format!("score:{}", user_account.score);
+        let score = format!("score:{}", user.score);
         res.send(TextModel::new(&req.user, &score)).await?;
-        if user_account.category.is_none() {
-            let req = req.new_from(Data::new(Settings::ChooseCategory));
-            setting(res, req).await?;
-        } else {
-            ask_question(res, req).await?;
-        }
+        ask_question(res, req).await?;
     } else {
         let message = "Please provide your pseudonym in this field.";
         res.send(TextModel::new(&req.user, message)).await?;
@@ -77,43 +65,44 @@ async fn home(res: Res, req: Req) -> Result<()> {
 
 async fn setting(res: Res, req: Req) -> Result<()> {
     let conn = req.query.conn.clone();
-    if let Some(mut user_account) = UserAccount::get(kwargs!(user_id == &req.user), &conn).await? {
+    if let Some(mut user) = User::get(kwargs!(user_id == &req.user), &conn).await? {
         match req.data.get_value::<Settings>() {
             Settings::ResetScoreAccount => {
-                user_account.score = 0;
-                user_account.update(&conn).await?;
+                user.score = 0;
+                user.update(&conn).await?;
             }
             Settings::DeleteAccount => {
-                user_account.delete(&conn).await?;
+                user.delete(&conn).await?;
             }
             Settings::ChooseCategory => {
-                let quick_reply = |c| {
-                    QuickReply::new(
-                        c,
-                        None,
-                        Payload::new("/choose_category", Some(Data::new(c))),
-                    )
-                };
-
                 let quick_replies = ["math", "science", "history", "sport", "programming"]
                     .into_iter()
-                    .map(quick_reply)
+                    .map(|category| {
+                        QuickReply::new(
+                            category,
+                            None,
+                            Payload::new("/choose_category", Some(Data::new(category))),
+                        )
+                    })
                     .collect();
 
-                let quick_reply_model =
-                    QuickReplyModel::new(&req.user, "Choose Category", quick_replies);
-                res.send(quick_reply_model).await?;
+                res.send(QuickReplyModel::new(
+                    &req.user,
+                    "Choose Category",
+                    quick_replies,
+                ))
+                .await?;
                 return Ok(());
             }
         };
     }
-    Box::pin(home(res, req)).await?;
+    home(res, req).await?;
     Ok(())
 }
 
 async fn register(res: Res, req: Req) -> Result<()> {
     let username: String = req.data.get_value();
-    let message = if UserAccount::create(
+    let message = if User::create(
         kwargs!(name = &username, user_id = &req.user),
         &req.query.conn,
     )
@@ -137,24 +126,12 @@ struct QuestionAndAnswer {
 }
 
 async fn ask_question(res: Res, req: Req) -> Result<()> {
-    let data = match load() {
-        Ok(data) => data,
-        Err(err) => {
-            let message = "Failed to load categories";
-            res.send(TextModel::new(&req.user, message)).await?;
-            error::bail!("{err:?}");
-        }
-    };
-
-    let user_account = UserAccount::get(kwargs!(user_id = &req.user), &req.query.conn)
+    let data = load()?;
+    let user = User::get(kwargs!(user_id = &req.user), &req.query.conn)
         .await?
         .context("failed to get user")?;
 
-    let questions = match user_account
-        .category
-        .context("category not found")?
-        .as_str()
-    {
+    let questions = match user.category.context("category not found")?.as_str() {
         "math" => data.math,
         "science" => data.science,
         "history" => data.history,
@@ -210,11 +187,9 @@ async fn response(res: Res, req: Req) -> Result<()> {
     } = req.data.get_value();
     let conn = req.query.conn.clone();
     if user_answer.to_lowercase() == true_answer.to_lowercase() {
-        if let Some(mut user_account) =
-            UserAccount::get(kwargs!(user_id == &req.user), &conn).await?
-        {
-            user_account.score += 1;
-            user_account.update(&conn).await?;
+        if let Some(mut user) = User::get(kwargs!(user_id == &req.user), &conn).await? {
+            user.score += 1;
+            user.update(&conn).await?;
         }
         res.send(TextModel::new(&req.user, "Correct!")).await?;
     } else {
@@ -238,9 +213,9 @@ async fn response(res: Res, req: Req) -> Result<()> {
 async fn choose_category(res: Res, req: Req) -> Result<()> {
     let category: String = req.data.get_value();
     let conn = &req.query.conn;
-    if let Some(mut user_account) = UserAccount::get(kwargs!(user_id == &req.user), conn).await? {
-        user_account.category = Some(category);
-        user_account.update(conn).await?;
+    if let Some(mut user) = User::get(kwargs!(user_id == &req.user), conn).await? {
+        user.category = Some(category);
+        user.update(conn).await?;
     }
     res.send(TextModel::new(&req.user, "Category is set"))
         .await?;
