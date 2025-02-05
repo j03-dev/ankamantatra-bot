@@ -59,7 +59,6 @@ async fn home(res: Res, req: Req) -> Result<()> {
         res.send(TextModel::new(&req.user, message)).await?;
         res.redirect("/register").await?;
     }
-
     Ok(())
 }
 
@@ -101,17 +100,12 @@ async fn setting(res: Res, req: Req) -> Result<()> {
 }
 
 async fn register(res: Res, req: Req) -> Result<()> {
+    let conn = &req.query.conn;
     let username: String = req.data.get_value();
-    let message = if User::create(
-        kwargs!(name = &username, user_id = &req.user),
-        &req.query.conn,
-    )
-    .await
-    .is_ok()
-    {
-        "User registered successfully"
-    } else {
-        "Failed to register user"
+    let result = User::create(kwargs!(name = &username, user_id = &req.user), conn).await;
+    let message = match result {
+        Ok(_) => "User registered successfully",
+        Err(err) => &err.to_string(),
     };
     res.send(TextModel::new(&req.user, message)).await?;
     home(res, req).await?;
@@ -172,9 +166,8 @@ async fn ask_question(res: Res, req: Req) -> Result<()> {
         })
         .collect();
 
-    let quick_reply_model = QuickReplyModel::new(&req.user, "Choose an option", quick_replies);
-
-    res.send(quick_reply_model).await?;
+    let quick_reply = QuickReplyModel::new(&req.user, "Choose an option", quick_replies);
+    res.send(quick_reply).await?;
 
     Ok(())
 }
