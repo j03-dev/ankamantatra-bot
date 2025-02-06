@@ -50,9 +50,9 @@ async fn index(res: Res, req: Req) -> Result<()> {
 async fn home(res: Res, req: Req) -> Result<()> {
     if let Some(user) = User::get(kwargs!(user_id == &req.user), &req.query.conn).await? {
         let username = format!("username:{}", user.name);
-        res.send(TextModel::new(&req.user, &username)).await?;
+        res.send(TextModel::new(&req.user, username)).await?;
         let score = format!("score:{}", user.score);
-        res.send(TextModel::new(&req.user, &score)).await?;
+        res.send(TextModel::new(&req.user, score)).await?;
         ask_question(res, req).await?;
     } else {
         let message = "Please provide your pseudonym in this field.";
@@ -147,11 +147,11 @@ async fn ask_question(res: Res, req: Req) -> Result<()> {
     let options = &question.options;
     let true_answer = &question.answer;
 
-    let quick_reply = |qa: QuestionAndAnswer| {
+    let quick_reply = |question_answer: QuestionAndAnswer| {
         QuickReply::new(
-            &qa.user_answer.clone(),
+            question_answer.user_answer.clone(),
             None,
-            Payload::new("/response", Some(Data::new(qa))),
+            Payload::new("/response", Some(Data::new(question_answer))),
         )
     };
 
@@ -188,8 +188,13 @@ async fn response(res: Res, req: Req) -> Result<()> {
     } else {
         res.send(TextModel::new(&req.user, "Incorrect!")).await?;
         let message = format!("The answer is : {true_answer}");
-        res.send(TextModel::new(&req.user, &message)).await?;
-        let prompt = format!("The question is {question}, explain to me why: {true_answer} is the right answer, in one paragraph");
+        res.send(TextModel::new(&req.user, message)).await?;
+        let prompt = format!(
+            r#"
+            The question is {question},
+            explain to me why: {true_answer}
+            is the right answer, in one paragraph"#
+        );
         let response = ask_gemini(prompt).await?;
 
         if let Some(candidate) = response.candidates.first() {
@@ -209,9 +214,9 @@ async fn choose_category(res: Res, req: Req) -> Result<()> {
     if let Some(mut user) = User::get(kwargs!(user_id == &req.user), conn).await? {
         user.category = Some(category);
         user.update(conn).await?;
+        res.send(TextModel::new(&req.user, "Category is set"))
+            .await?;
     }
-    res.send(TextModel::new(&req.user, "Category is set"))
-        .await?;
     ask_question(res, req).await?;
     Ok(())
 }
