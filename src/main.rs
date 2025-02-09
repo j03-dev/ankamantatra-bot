@@ -1,5 +1,4 @@
 mod gemini;
-mod migrate;
 mod models;
 mod serializers;
 #[cfg(test)]
@@ -30,15 +29,15 @@ async fn index(res: Res, req: Req) -> Result<()> {
         &req.user,
         vec![
             Button::Postback {
-                title: "Reset Score".into(),
+                title: "Reset Score",
                 payload: payload(Settings::ResetScoreAccount),
             },
             Button::Postback {
-                title: "Delete Account".into(),
+                title: "Delete Account",
                 payload: payload(Settings::DeleteAccount),
             },
             Button::Postback {
-                title: "Change Category".into(),
+                title: "Change Category",
                 payload: payload(Settings::ChooseCategory),
             },
         ],
@@ -82,8 +81,7 @@ async fn setting(res: Res, req: Req) -> Result<()> {
                             None,
                             Payload::new("/choose_category", Some(Data::new(category))),
                         )
-                    })
-                    .collect();
+                    });
 
                 res.send(QuickReplyModel::new(
                     &req.user,
@@ -147,24 +145,20 @@ async fn ask_question(res: Res, req: Req) -> Result<()> {
     let options = &question.options;
     let true_answer = &question.answer;
 
-    let quick_reply = |question_answer: QuestionAndAnswer| {
+    let quick_replies = options.into_iter().map(|option| {
         QuickReply::new(
-            question_answer.user_answer.clone(),
+            option,
             None,
-            Payload::new("/response", Some(Data::new(question_answer))),
+            Payload::new(
+                "/response",
+                Some(Data::new(QuestionAndAnswer {
+                    question: question.question.clone(),
+                    user_answer: option.to_string(),
+                    true_answer: true_answer.to_string(),
+                })),
+            ),
         )
-    };
-
-    let quick_replies = options
-        .iter()
-        .map(|option| {
-            quick_reply(QuestionAndAnswer {
-                question: question.question.clone(),
-                true_answer: true_answer.to_string(),
-                user_answer: option.to_string(),
-            })
-        })
-        .collect();
+    });
 
     let quick_reply = QuickReplyModel::new(&req.user, "Choose an option", quick_replies);
     res.send(quick_reply).await?;
@@ -223,8 +217,6 @@ async fn choose_category(res: Res, req: Req) -> Result<()> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    migrate::migrate().await?;
-
     App::init()
         .await?
         .attach(

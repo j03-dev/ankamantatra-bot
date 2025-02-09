@@ -1,5 +1,3 @@
-#[allow(unused_imports)]
-pub use russenger::models::RussengerUser;
 use russenger::prelude::*;
 
 #[derive(Model, FromRow, Clone)]

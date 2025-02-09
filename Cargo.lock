@@ -412,9 +412,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.12"
+version = "1.2.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "755717a7de9ec452bf7f3f1a3099085deabd7f2962b861dae91ecd7a365903d2"
+checksum = "c7777341816418c02e033934a09f20dc0ccaf65a5201ef8a450ae0105a573fda"
 dependencies = [
  "jobserver",
  "libc",
@@ -1219,6 +1219,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "inventory"
+version = "0.3.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "54b12ebb6799019b044deaf431eadfe23245b259bba5a2c0796acec3943a3cdb"
+dependencies = [
+ "rustversion",
+]
+
+[[package]]
 name = "ipnet"
 version = "2.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1466,9 +1475,9 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
-version = "1.20.2"
+version = "1.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1261fe7e33c73b354eab43b1273a57c8f967d0391e80353e51f764ac02cf6775"
+checksum = "945462a4b81e43c4e3ba96bd7b49d834c6f61198356aa858733bc4acf3cbe62e"
 
 [[package]]
 name = "openssl"
@@ -1791,13 +1800,14 @@ dependencies = [
 
 [[package]]
 name = "rusql-alchemy"
-version = "0.4.2-rc"
+version = "0.4.3-rc"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f4b2443352c3f832559856375577b069419b7c9aa6274cb03ccc5d87f3b5d56"
+checksum = "0b952fee247d548f8c4ae52ac0a42d399e074c968f9eb6724a15899695828856"
 dependencies = [
  "anyhow",
  "async-trait",
  "dotenv",
+ "inventory",
  "lazy_static",
  "rusql-alchemy-macro",
  "serde",
@@ -1809,9 +1819,9 @@ dependencies = [
 
 [[package]]
 name = "rusql-alchemy-macro"
-version = "0.4.2-rc"
+version = "0.4.3-rc"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a8361c96c40299c851fb3beaafab42fa789cebb7e873d8265079880c476500bb"
+checksum = "b4090e2a7d278b9a9d5fc2e6dd5d33d482b9bfa2cf58f94b5548201e22689df6"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1821,7 +1831,7 @@ dependencies = [
 [[package]]
 name = "russenger"
 version = "0.3.0"
-source = "git+https://github.com/j03-dev/russenger?branch=dev#86438c0478a0ce8d5a12c4b08480201f7a465bfe"
+source = "git+https://github.com/j03-dev/russenger?branch=dev#83b3f30539d2ed469f59aec111ea8abc693f3950"
 dependencies = [
  "actix-files",
  "actix-web",
