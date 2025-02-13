@@ -27,7 +27,7 @@ async fn index(res: Res, req: Req) -> Result<()> {
     let payload = |setting| Payload::new("/setting", Some(Data::new(setting)));
     let persistent_menu = PersistentMenuModel::new(
         &req.user,
-        vec![
+        [
             Button::Postback {
                 title: "Reset Score",
                 payload: payload(Settings::ResetScoreAccount),
@@ -64,7 +64,7 @@ async fn home(res: Res, req: Req) -> Result<()> {
 async fn setting(res: Res, req: Req) -> Result<()> {
     let conn = req.query.conn.clone();
     if let Some(mut user) = User::get(kwargs!(user_id == &req.user), &conn).await? {
-        match req.data.get_value::<Settings>() {
+        match req.data.get_value::<Settings>()? {
             Settings::ResetScoreAccount => {
                 user.score = 0;
                 user.update(&conn).await?;
@@ -99,7 +99,7 @@ async fn setting(res: Res, req: Req) -> Result<()> {
 
 async fn register(res: Res, req: Req) -> Result<()> {
     let conn = &req.query.conn;
-    let username: String = req.data.get_value();
+    let username: String = req.data.get_value()?;
     let result = User::create(kwargs!(name = &username, user_id = &req.user), conn).await;
     let message = match result {
         Ok(_) => "User registered successfully",
@@ -171,7 +171,7 @@ async fn response(res: Res, req: Req) -> Result<()> {
         question,
         user_answer,
         true_answer,
-    } = req.data.get_value();
+    } = req.data.get_value()?;
     let conn = req.query.conn.clone();
     if user_answer.to_lowercase() == true_answer.to_lowercase() {
         if let Some(mut user) = User::get(kwargs!(user_id == &req.user), &conn).await? {
@@ -203,7 +203,7 @@ async fn response(res: Res, req: Req) -> Result<()> {
 }
 
 async fn choose_category(res: Res, req: Req) -> Result<()> {
-    let category: String = req.data.get_value();
+    let category: String = req.data.get_value()?;
     let conn = &req.query.conn;
     if let Some(mut user) = User::get(kwargs!(user_id == &req.user), conn).await? {
         user.category = Some(category);
