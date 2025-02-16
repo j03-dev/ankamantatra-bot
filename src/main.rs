@@ -13,9 +13,8 @@ use serializers::load;
 
 use crate::models::User;
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize)]
 enum Settings {
-    #[default]
     ResetScoreAccount,
     DeleteAccount,
     ChooseCategory,

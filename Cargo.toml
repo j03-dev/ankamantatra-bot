@@ -6,10 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies.russenger]
-version = "0.3.0"
 git = "https://github.com/j03-dev/russenger"
-features = ["sqlite"]
 branch = "dev"
+version = "0.3.0"
+features = ["sqlite"]
 
 [dependencies]
 sqlx = "0.8.0"
