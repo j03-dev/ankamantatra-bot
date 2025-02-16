@@ -21,22 +21,34 @@ enum Settings {
 }
 
 async fn index(res: Res, req: Req) -> Result<()> {
-    res.send(GetStartedButtonModel::new(Payload::new("/home", None)))
+    let wellcome_message = r#"
+    👋 Welcome to Boto Chat, your interactive quiz companion!
+    🎮 Get ready to test your knowledge across various categories and have fun learning! 🌟
+    "#;
+    res.send(TextModel::new(&req.user, wellcome_message))
+        .await?;
+    res.send(QuickReplyModel::new(
+        &req.user,
+        "GetStarted",
+        [QuickReply::new("Start", None, Payload::new("/home", None))],
+    ))
+    .await?;
+    res.send(GetStartedButtonModel::new(Payload::default()))
         .await?;
     let payload = |setting| Payload::new("/setting", Some(Data::new(setting)));
     let persistent_menu = PersistentMenuModel::new(
         &req.user,
         [
             Button::Postback {
-                title: "Reset Score",
+                title: "🔄 Reset Score",
                 payload: payload(Settings::ResetScoreAccount),
             },
             Button::Postback {
-                title: "Delete Account",
+                title: "🗑️ Delete Account",
                 payload: payload(Settings::DeleteAccount),
             },
             Button::Postback {
-                title: "Change Category",
+                title: "🔧 Change Category",
                 payload: payload(Settings::ChooseCategory),
             },
         ],
@@ -47,13 +59,13 @@ async fn index(res: Res, req: Req) -> Result<()> {
 
 async fn home(res: Res, req: Req) -> Result<()> {
     if let Some(user) = User::get(kwargs!(user_id == &req.user), &req.query.conn).await? {
-        let username = format!("username:{}", user.name);
+        let username = format!("👤 Username: {}", user.name);
         res.send(TextModel::new(&req.user, username)).await?;
-        let score = format!("score:{}", user.score);
+        let score = format!("🏆 Score: {}", user.score);
         res.send(TextModel::new(&req.user, score)).await?;
         ask_question(res, req).await?;
     } else {
-        let message = "Please provide your pseudonym in this field.";
+        let message = "📝 Please provide your pseudonym in this field.";
         res.send(TextModel::new(&req.user, message)).await?;
         res.redirect("/register").await?;
     }
@@ -67,24 +79,37 @@ async fn setting(res: Res, req: Req) -> Result<()> {
             Settings::ResetScoreAccount => {
                 user.score = 0;
                 user.update(&conn).await?;
+                res.send(TextModel::new(&req.user, "🔄 Score reset successfully!"))
+                    .await?;
             }
             Settings::DeleteAccount => {
                 user.delete(&conn).await?;
+                res.send(TextModel::new(
+                    &req.user,
+                    "🗑️ Account deleted successfully!",
+                ))
+                .await?;
             }
             Settings::ChooseCategory => {
-                let quick_replies = ["math", "science", "history", "sport", "programming"]
-                    .into_iter()
-                    .map(|category| {
-                        QuickReply::new(
-                            category,
-                            None,
-                            Payload::new("/choose_category", Some(Data::new(category))),
-                        )
-                    });
+                let quick_replies = [
+                    "🔢 Math",
+                    "🔬 Science",
+                    "📜 History",
+                    "⚽ Sport",
+                    "💻 Programming",
+                ]
+                .into_iter()
+                .map(|category| {
+                    QuickReply::new(
+                        category,
+                        None,
+                        Payload::new("/choose_category", Some(Data::new(category))),
+                    )
+                });
 
                 res.send(QuickReplyModel::new(
                     &req.user,
-                    "Choose Category",
+                    "🔧 Choose a Category",
                     quick_replies,
                 ))
                 .await?;
@@ -100,8 +125,11 @@ async fn register(res: Res, req: Req) -> Result<()> {
     let conn = &req.query.conn;
     let username: String = req.data.get_value()?;
     User::create(kwargs!(name = &username, user_id = &req.user), conn).await?;
-    res.send(TextModel::new(&req.user, "User registered successfully"))
-        .await?;
+    res.send(TextModel::new(
+        &req.user,
+        "🎉 User registered successfully!",
+    ))
+    .await?;
     home(res, req).await?;
     Ok(())
 }
@@ -126,7 +154,7 @@ async fn ask_question(res: Res, req: Req) -> Result<()> {
         "sport" => data.sports,
         "programming" => data.programming,
         _ => {
-            let message = "Invalid category";
+            let message = "🚫 Invalid category";
             res.send(TextModel::new(&req.user, message)).await?;
             return Ok(());
         }
@@ -156,7 +184,7 @@ async fn ask_question(res: Res, req: Req) -> Result<()> {
         )
     });
 
-    let quick_reply = QuickReplyModel::new(&req.user, "Choose an option", quick_replies);
+    let quick_reply = QuickReplyModel::new(&req.user, "🔍 Choose an option", quick_replies);
     res.send(quick_reply).await?;
 
     Ok(())
@@ -174,10 +202,10 @@ async fn response(res: Res, req: Req) -> Result<()> {
             user.score += 1;
             user.update(&conn).await?;
         }
-        res.send(TextModel::new(&req.user, "Correct!")).await?;
+        res.send(TextModel::new(&req.user, "🎉 Correct!")).await?;
     } else {
-        res.send(TextModel::new(&req.user, "Incorrect!")).await?;
-        let message = format!("The answer is : {true_answer}");
+        res.send(TextModel::new(&req.user, "❌ Incorrect!")).await?;
+        let message = format!("🔍 The correct answer is: {true_answer}");
         res.send(TextModel::new(&req.user, message)).await?;
         let prompt = format!(
             r#"
@@ -204,7 +232,7 @@ async fn choose_category(res: Res, req: Req) -> Result<()> {
     if let Some(mut user) = User::get(kwargs!(user_id == &req.user), conn).await? {
         user.category = Some(category);
         user.update(conn).await?;
-        res.send(TextModel::new(&req.user, "Category is set"))
+        res.send(TextModel::new(&req.user, "🔧 Category is set!"))
             .await?;
     }
     ask_question(res, req).await?;
